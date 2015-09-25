@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>m.yy.com 首页</title>
+<meta content="YY音乐,美女视频,美女直播,视频交友,在线音乐,美女主播" name="Keywords">
+<meta content="YY娱乐是全国最大的真人互动视频直播社区，支持百万人同时在线视频聊天、美女直播 、K歌跳舞、视频交友。看网络节目，与明星歌手、美女主播互动就在YY娱乐社区。" name="Description">
+<style>
+.marquee {
+	width:600px;
+	height:200px;
+	position:relative;
+	overflow:hidden;
+	border:1px solid #ccc;
+	margin:100px;
+}
+.marquee div {
+	position:absolute;
+	top:0;
+	background:RGBA(0,0,0,.4);
+}
+</style>
+</head>
+
+<body>
+<div class="marquee" id="marquee1"><!--div>YY娱乐是全国最大的真人互动视频直播社区</div><div>美女主播互动就在YY娱乐社区</div--></div>
+<script type="text/javascript" src="jquery.min.js"></script> 
+<script src="../marquee.js"></script> 
+<script>
+function getText() {
+	var textArr = ['YY娱乐是全国最大的真人互动视频直播社区','支持百万人同时在线视频聊天','美女直播 ','K歌跳舞','视频交友','看网络节目','与明星歌手','美女主播互动就在YY娱乐社区'];
+	var r = Math.floor(Math.random()*textArr.length);
+	return textArr[r];
+}
+var c = 0;
+var text = getText();
+var marqueeBox = $('#marquee1')[0];
+//var marqueeObj = marquee(marqueeBox,{duration:5000,direction:2,startEvent: function(s, t) {s.element.className='start';},endEvent:function(s, t){if(t - s.endTime < 2000) return true; return false;}});
+var marqueeObj = marquee(marqueeBox,{duration:5000,direction:3});
+//marqueeObj.push($('<div>'+getText()+'</div>')[0]);
+var intervalId = window.setInterval(function(){c++; if(c > 5) window.clearInterval(intervalId); marqueeObj.push($('<div>'+getText()+'</div>')[0]);}, 500);
+</script>
+</body>
+</html>
