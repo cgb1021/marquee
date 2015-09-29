@@ -1,7 +1,7 @@
 /*
  * 文本滚动组件/marquee
  * http://xhyo.com/
- * version: 1.0
+ * version: 1.1
  * Copyright (c) 2015 Bill Chen(chenguibiao@yy.com/48838096@qq.com)
  * Released under the MIT license - http://opensource.org/licenses/MIT
  */
@@ -50,7 +50,7 @@
         this.element.style.left = this.left +'px';
         this.element.style.top = this.top +'px';
         if(this.useHtml5) {
-            this.element.style.transition = 'transform '+this.duration/1000+'s linear';
+            this.element.style.transition = '';
             switch(this.direction) {
                 case 1: {}
                 case 3: {
@@ -69,7 +69,7 @@
 
         //重置时间
         this.startTime = 0; //开始时间
-        this.endTime = 0; //到达边缘时间
+        this.reachTime = 0; //到达边缘时间
         this.usedTime = 0; //移动时间
     }
     //销毁元素
@@ -85,24 +85,27 @@
         this.container = element; //移动容器
         this.width = element.clientWidth;
         this.height = element.clientHeight;
-        this.loop = 0; //循环次数
+        this.loop = 1; //循环次数,0:无限循环;>0:按次数循环
         this.duration = element.clientWidth*10; //移动持续时间
         this.direction = 0; //0:从右往左；1:从下往上；2:从左往右；3:从上往下
         this.prevScroller = null; //上一个移动对象
+        this.fistScroller = null; //第一个对象
         this.startEvent = null; //移动元素开始事件
-        this.endEvent = null; //移动元素到达终点事件,return true的时候到达终点后暂停
+        this.endEvent = null; //移动结束事件
+        this.reachEvent = null; //移动元素到达边缘事件,return true的时候到达边缘后暂停
         this.hoverEvent = null; //移动元素鼠标悬停事件
-        this.isAsync = false; //移动元素异步执行动画
         this.lastTime = 0; //队列上一次执行时间
         this.useHtml5 = false; //使用html5
+        this.loopCounter = 0; //执行次数
         //参数配置
         if(option) {
             this.useHtml5 = !!(supportHtml5 && option.useHtml5);
-            this.loop = option.loop || this.loop;
-            this.direction = option.direction || this.direction;
-            this.duration = option.duration || this.duration;
+            this.loop = typeof option.loop != 'undefined'?parseInt(option.loop,10):1;
+            this.direction = parseInt(option.direction,10) || this.direction;
+            this.duration = parseInt(option.duration,10) || this.duration;
             this.startEvent = option.startEvent || this.startEvent;
             this.endEvent = option.endEvent || this.endEvent;
+            this.reachEvent = option.reachEvent || this.reachEvent;
             this.hoverEvent = option.hoverEvent || this.hoverEvent;
         }
 
@@ -159,7 +162,8 @@
         scroller = new Scroller(option);
         if(!this.prevScroller) {
             this.lastTime = time = new Date().getTime();
-            this.prevScroller = scroller;
+            this.fistScroller = this.prevScroller = scroller;
+            this.loopCounter = 1;
             //启动第一个移动对象
             this.list.push(scroller);
             if(!this.useHtml5)
@@ -190,6 +194,7 @@
         if(length) {
             //启动下一个对象
             scroller = this.list[length-1];
+
             if(scroller.nextSibling && !scroller.nextSibling.startTime) {
                 switch(this.direction) {
                     case 1: {
@@ -252,9 +257,19 @@
                 scroller = this.list[i];
                 if(scroller.usedTime > scroller.duration) {
                     //到达终点，清理元素
-                    scroller.destroy();
+                    if(this.endEvent) {
+                        this.endEvent(scroller, time);
+                    }
+                    if(this.loop === 0 || this.loopCounter<this.loop) {
+                        //重置元素
+                        scroller.reset();
+                    } else {
+                        //清理元素
+                        scroller.destroy();
+                    }
+
                     this.list[i] = null;
-                } else if(scroller.endTime && this.endEvent && this.endEvent(scroller, time)) {
+                } else if(scroller.reachTime && !this.useHtml5 && this.reachEvent && this.reachEvent(scroller, time)) {
                     //到达边缘暂停
                 } else {
                     //正常流程
@@ -262,11 +277,12 @@
                         case 1: {
                             if(this.useHtml5) {
                                 if(!scroller.startTime) {
+                                    scroller.element.style.transition = 'transform '+this.duration/1000+'s linear';
                                     scroller.element.style.transform = 'translateY(-' + scroller.distance + 'px)';
                                     scroller.startTime = time;
                                 }
-                                if(i < 2 && !scroller.endTime && scroller.usedTime >= this.duration){
-                                    scroller.endTime = time;
+                                if(i < 2 && !scroller.reachTime && scroller.usedTime >= this.duration){
+                                    scroller.reachTime = time;
                                 }
                                 scroller.usedTime += interval;
                             } else {
@@ -274,9 +290,9 @@
                                 if(i > 0  && this.list[i-1] && (this.list[i-1].y+this.list[i-1].height)>position) {
                                     //和前一个元素重叠，暂停
                                 } else {
-                                    if(i < 2 && !scroller.endTime && position<=0) {
+                                    if(i < 2 && !scroller.reachTime && position<=0) {
                                         //到达边缘
-                                        scroller.endTime = time;
+                                        scroller.reachTime = time;
                                         position = 0;
                                     }
                                     scroller.y = position;
@@ -289,11 +305,12 @@
                         case 3: {
                             if(this.useHtml5) {
                                 if(!scroller.startTime) {
+                                    scroller.element.style.transition = 'transform '+this.duration/1000+'s linear';
                                     scroller.element.style.transform = 'translateY(' + scroller.distance + 'px)';
                                     scroller.startTime = time;
                                 }
-                                if(i < 2 && !scroller.endTime && scroller.usedTime >= this.duration){
-                                    scroller.endTime = time;
+                                if(i < 2 && !scroller.reachTime && scroller.usedTime >= this.duration){
+                                    scroller.reachTime = time;
                                 }
                                 scroller.usedTime += interval;
                             } else {
@@ -301,9 +318,9 @@
                                 if(i > 0  && this.list[i-1] && (position+scroller.height)>this.list[i-1].y) {
                                     //和前一个元素重叠，暂停
                                 } else {
-                                    if(i < 2 && !scroller.endTime && position>=(this.height-scroller.height)) {
+                                    if(i < 2 && !scroller.reachTime && position>=(this.height-scroller.height)) {
                                         //到达边缘
-                                        scroller.endTime = time;
+                                        scroller.reachTime = time;
                                         position = this.height-scroller.height;
                                     }
                                     scroller.y = position;
@@ -317,11 +334,12 @@
                         case 2: {
                             if(this.useHtml5) {
                                 if(!scroller.startTime) {
+                                    scroller.element.style.transition = 'transform '+this.duration/1000+'s linear';
                                     scroller.element.style.transform = 'translateX(' + scroller.distance + 'px)';
                                     scroller.startTime = time;
                                 }
-                                if(i < 2 && !scroller.endTime && scroller.usedTime >= this.duration){
-                                    scroller.endTime = time;
+                                if(i < 2 && !scroller.reachTime && scroller.usedTime >= this.duration){
+                                    scroller.reachTime = time;
                                 }
                                 scroller.usedTime += interval;
                             } else {
@@ -329,9 +347,9 @@
                                 if(i > 0  && this.list[i-1] && (position+scroller.width)>this.list[i-1].x) {
                                     //和前一个元素重叠，暂停
                                 } else {
-                                    if(i < 2 && !scroller.endTime && position>=(this.width-scroller.width)) {
+                                    if(i < 2 && !scroller.reachTime && position>=(this.width-scroller.width)) {
                                         //到达边缘
-                                        scroller.endTime = time;
+                                        scroller.reachTime = time;
                                         position = this.width-scroller.width;
                                     }
                                     scroller.x = position;
@@ -344,11 +362,12 @@
                         default: {
                             if(this.useHtml5) {
                                 if(!scroller.startTime) {
+                                    scroller.element.style.transition = 'transform '+this.duration/1000+'s linear';
                                     scroller.element.style.transform = 'translateX(-' + scroller.distance + 'px)';
                                     scroller.startTime = time;
                                 }
-                                if(i < 2 && !scroller.endTime && scroller.usedTime >= this.duration){
-                                    scroller.endTime = time;
+                                if(i < 2 && !scroller.reachTime && scroller.usedTime >= this.duration){
+                                    scroller.reachTime = time;
                                 }
                                 scroller.usedTime += interval;
                             } else {
@@ -356,9 +375,9 @@
                                 if(i > 0  && this.list[i-1] && (this.list[i-1].x+this.list[i-1].width)>position) {
                                     //和前一个元素重叠，暂停
                                 } else {
-                                    if(i < 2 && !scroller.endTime && position<=0) {
+                                    if(i < 2 && !scroller.reachTime && position<=0) {
                                         //到达边缘
-                                        scroller.endTime = time;
+                                        scroller.reachTime = time;
                                         position = 0;
                                     }
                                     scroller.x = position;
@@ -377,9 +396,19 @@
             }
             if(this.list.length){
                 animationFrame(function(){_this.animate();});
+            } else if(this.loop === 0 || this.loopCounter++<this.loop) {
+                //重新启动
+                scroller = this.fistScroller;
+                this.list.push(scroller);
+                if(!this.useHtml5)
+                    scroller.startTime = time;
+                if(this.startEvent)
+                    this.startEvent(scroller, time);
+                animationFrame(function(){_this.animate();});
             } else {
                 //todo: 空队列，动画结束，执行回调函数
                 this.prevScroller = null;
+                this.fistScroller = null;
             }
         } else {
             //空队列，动画结束，执行回调函数
