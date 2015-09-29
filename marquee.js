@@ -6,12 +6,12 @@
  * Released under the MIT license - http://opensource.org/licenses/MIT
  */
 (function(window){
-    var document = window.document;
     var animationFrame = null;
-    var supportHtml5 = true;
+    var supportHtml5 = false;
     var marqueeList = {};
     //定义动画执行函数
     if(window.requestAnimationFrame){
+        supportHtml5 = true; //只支持标准模式
         animationFrame = function(callback) {window.requestAnimationFrame(callback);}
     } else {
         var prefix = ['webkit','moz','ms','o'];
@@ -21,7 +21,6 @@
                 break;
             }
         if(!this.animationFrame) {
-            supportHtml5 = false;
             animationFrame = function(callback) {window.setTimeout(callback,1000/60)}
         }
     }
@@ -77,8 +76,10 @@
         this.hoverEvent = null; //移动元素鼠标悬停事件
         this.isAsync = false; //移动元素异步执行动画
         this.lastTime = 0; //队列上一次执行时间
+        this.useHtml5 = false; //使用html5
         //参数配置
         if(option) {
+            this.useHtml5 = !!(supportHtml5 && option.useHtml5);
             this.loop = option.loop || this.loop;
             this.direction = option.direction || this.direction;
             this.duration = option.duration || this.duration;
@@ -143,8 +144,9 @@
             this.lastTime = time = new Date().getTime();
             this.prevScroller = scroller;
             //启动第一个移动对象
-            scroller.startTime = time;
             this.list.push(scroller);
+            if(!this.useHtml5)
+                scroller.startTime = time;
             if(this.startEvent)
                 this.startEvent(scroller, time);
             this.animate();
@@ -173,33 +175,60 @@
             scroller = this.list[length-1];
             switch(this.direction) {
                 case 1: {
-                    if((scroller.y+scroller.height) <= this.height)
-                        isNextStart = true;
+                    if(this.useHtml5) {
+                        if((time -scroller.startTime) >= scroller.duration*scroller.height/(scroller.height+this.height)){
+                            isNextStart = true;
+                        }
+                    } else {
+                        if((scroller.y+scroller.height) <= this.height)
+                            isNextStart = true;
                     }
+                }
                     break;
                 case 2: {
-                    if(scroller.x >= 0)
-                        isNextStart = true;
+                    if(this.useHtml5) {
+                        if((time -scroller.startTime) >= scroller.duration*scroller.width/(scroller.width+this.width)){
+                            isNextStart = true;
+                        }
+                    } else {
+                        if(scroller.x >= 0)
+                            isNextStart = true;
+                    }
                 }
                     break;
                 case 3: {
-                    if(scroller.y >= 0)
-                        isNextStart = true;
+                    if(this.useHtml5) {
+                        if((time -scroller.startTime) >= scroller.duration*scroller.height/(scroller.height+this.height)){
+                            isNextStart = true;
+                        }
+                    } else {
+                        if(scroller.y >= 0)
+                            isNextStart = true;
+                    }
                 }
                     break;
                 default: {
-                    if((scroller.x+scroller.width) <= this.width)
-                        isNextStart = true;
+                    if(this.useHtml5) {
+                        if((time -scroller.startTime) >= scroller.duration*scroller.width/(scroller.width+this.width)){
+                            isNextStart = true;
+                        }
+                    } else {
+                        if((scroller.x+scroller.width) <= this.width)
+                            isNextStart = true;
+                    }
                 }
             }
-            if(isNextStart && scroller.nextSibling && !scroller.nextSibling.startTime) {
-                scroller.nextSibling.startTime = time;
-                this.list.push(scroller.nextSibling);
+            scroller = scroller.nextSibling;
+            if(isNextStart && scroller && !scroller.startTime) {
+                this.list.push(scroller);
+                if(!this.useHtml5)
+                    scroller.startTime = time;
                    //执行开始事件
                 if(this.startEvent)
-                    this.startEvent(scroller.nextSibling, time);
+                    this.startEvent(scroller, time);
                 length +=1;
             }
+
             for(i=0; i < length; i++){
                 scroller = this.list[i];
                 if(scroller.usedTime > scroller.duration) {
@@ -212,66 +241,115 @@
                     //正常流程
                     switch(this.direction) {
                         case 1: {
-                            position = scroller.top-(scroller.distance * (scroller.usedTime+interval)/scroller.duration);
-                            if(i > 0  && this.list[i-1] && (this.list[i-1].y+this.list[i-1].height)>position) {
-                                //和前一个元素重叠，暂停
-                            } else {
-                                if(i < 2 && !scroller.endTime && position<=0) {
-                                    //到达边缘
-                                    scroller.endTime = time;
-                                    position = 0;
+                            if(this.useHtml5) {
+                                if(!scroller.startTime) {
+                                    scroller.element.style.transition = 'transform '+scroller.duration/1000+'s linear';
+                                    scroller.element.style.transform = 'translateY(-'+(scroller.height+this.height)+'px)';
+                                    scroller.startTime = time;
                                 }
-                                scroller.y = position;
-                                scroller.element.style.top = position+'px';
-                                scroller.usedTime += interval;
-                            }
-                        }
-                            break;
-                        case 2: {
-                            position = scroller.left+(scroller.distance * (scroller.usedTime+interval)/scroller.duration);
-                            if(i > 0  && this.list[i-1] && (position+scroller.width)>this.list[i-1].x) {
-                                //和前一个元素重叠，暂停
-                            } else {
-                                if(i < 2 && !scroller.endTime && position>=(this.width-scroller.width)) {
-                                    //到达边缘
+                                if(i < 2 && !scroller.endTime && (time -scroller.startTime) >= this.duration){
                                     scroller.endTime = time;
-                                    position = this.width-scroller.width;
                                 }
-                                scroller.x = position;
-                                scroller.element.style.left = position+'px';
-                                scroller.usedTime += interval;
+                                scroller.usedTime = time-scroller.startTime;
+                            } else {
+                                position = scroller.top-(scroller.distance * (scroller.usedTime+interval)/scroller.duration);
+                                if(i > 0  && this.list[i-1] && (this.list[i-1].y+this.list[i-1].height)>position) {
+                                    //和前一个元素重叠，暂停
+                                } else {
+                                    if(i < 2 && !scroller.endTime && position<=0) {
+                                        //到达边缘
+                                        scroller.endTime = time;
+                                        position = 0;
+                                    }
+                                    scroller.y = position;
+                                    scroller.element.style.top = position+'px';
+                                    scroller.usedTime += interval;
+                                }
                             }
                         }
                             break;
                         case 3: {
-                            position = scroller.top+(scroller.distance * (scroller.usedTime+interval)/scroller.duration);
-                            if(i > 0  && this.list[i-1] && (position+scroller.height)>this.list[i-1].y) {
-                                //和前一个元素重叠，暂停
-                            } else {
-                                if(i < 2 && !scroller.endTime && position>=(this.height-scroller.height)) {
-                                    //到达边缘
-                                    scroller.endTime = time;
-                                    position = this.height-scroller.height;
+                            if(this.useHtml5) {
+                                if(!scroller.startTime) {
+                                    scroller.element.style.transition = 'transform ' + scroller.duration / 1000 + 's linear';
+                                    scroller.element.style.transform = 'translateY(' + (scroller.height + this.height) + 'px)';
+                                    scroller.startTime = time;
                                 }
-                                scroller.y = position;
-                                scroller.element.style.top = position+'px';
-                                scroller.usedTime += interval;
+                                if(i < 2 && !scroller.endTime && (time -scroller.startTime) >= this.duration){
+                                    scroller.endTime = time;
+                                }
+                                scroller.usedTime = time-scroller.startTime;
+                            } else {
+                                position = scroller.top+(scroller.distance * (scroller.usedTime+interval)/scroller.duration);
+                                if(i > 0  && this.list[i-1] && (position+scroller.height)>this.list[i-1].y) {
+                                    //和前一个元素重叠，暂停
+                                } else {
+                                    if(i < 2 && !scroller.endTime && position>=(this.height-scroller.height)) {
+                                        //到达边缘
+                                        scroller.endTime = time;
+                                        position = this.height-scroller.height;
+                                    }
+                                    scroller.y = position;
+                                    scroller.element.style.top = position+'px';
+                                    scroller.usedTime += interval;
+                                }
+                            }
+
+                        }
+                            break;
+                        case 2: {
+                            if(this.useHtml5) {
+                                if(!scroller.startTime) {
+                                    scroller.element.style.transition = 'transform ' + scroller.duration / 1000 + 's linear';
+                                    scroller.element.style.transform = 'translateX(' + (scroller.width + this.width) + 'px)';
+                                    scroller.startTime = time;
+                                }
+                                if(i < 2 && !scroller.endTime && (time -scroller.startTime) >= this.duration){
+                                    scroller.endTime = time;
+                                }
+                                scroller.usedTime = time-scroller.startTime;
+                            } else {
+                                position = scroller.left+(scroller.distance * (scroller.usedTime+interval)/scroller.duration);
+                                if(i > 0  && this.list[i-1] && (position+scroller.width)>this.list[i-1].x) {
+                                    //和前一个元素重叠，暂停
+                                } else {
+                                    if(i < 2 && !scroller.endTime && position>=(this.width-scroller.width)) {
+                                        //到达边缘
+                                        scroller.endTime = time;
+                                        position = this.width-scroller.width;
+                                    }
+                                    scroller.x = position;
+                                    scroller.element.style.left = position+'px';
+                                    scroller.usedTime += interval;
+                                }
                             }
                         }
                             break;
                         default: {
-                            position = scroller.left-(scroller.distance * (scroller.usedTime+interval)/scroller.duration);
-                            if(i > 0  && this.list[i-1] && (this.list[i-1].x+this.list[i-1].width)>position) {
-                                //和前一个元素重叠，暂停
-                            } else {
-                                if(i < 2 && !scroller.endTime && position<=0) {
-                                    //到达边缘
-                                    scroller.endTime = time;
-                                    position = 0;
+                            if(this.useHtml5) {
+                                if(!scroller.startTime) {
+                                    scroller.element.style.transition = 'transform '+scroller.duration/1000+'s linear';
+                                    scroller.element.style.transform = 'translateX(-'+(scroller.width+this.width)+'px)';
+                                    scroller.startTime = time;
                                 }
-                                scroller.x = position;
-                                scroller.element.style.left = position+'px';
-                                scroller.usedTime += interval;
+                                if(i < 2 && !scroller.endTime && (time -scroller.startTime) >= this.duration){
+                                    scroller.endTime = time;
+                                }
+                                scroller.usedTime = time-scroller.startTime;
+                            } else {
+                                position = scroller.left-(scroller.distance * (scroller.usedTime+interval)/scroller.duration);
+                                if(i > 0  && this.list[i-1] && (this.list[i-1].x+this.list[i-1].width)>position) {
+                                    //和前一个元素重叠，暂停
+                                } else {
+                                    if(i < 2 && !scroller.endTime && position<=0) {
+                                        //到达边缘
+                                        scroller.endTime = time;
+                                        position = 0;
+                                    }
+                                    scroller.x = position;
+                                    scroller.element.style.left = position+'px';
+                                    scroller.usedTime += interval;
+                                }
                             }
                         }
                     }
@@ -299,7 +377,7 @@
             if(marqueeList[element])
                 return marqueeList[element];
 
-            element = document.getElementById(element);
+            element = window.document.getElementById(element);
             if(element) {
                 marqueeList[element.id] = new Marquee(element,option);
                 return marqueeList[element.id];
