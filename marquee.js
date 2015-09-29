@@ -199,7 +199,7 @@
                 switch(this.direction) {
                     case 1: {
                         if(this.useHtml5) {
-                            if((time -scroller.startTime) >= scroller.duration*scroller.height/scroller.distance){
+                            if(scroller.usedTime >= scroller.duration*scroller.height/scroller.distance){
                                 isNextStart = true;
                             }
                         } else {
@@ -210,7 +210,7 @@
                         break;
                     case 3: {
                         if(this.useHtml5) {
-                            if((time -scroller.startTime) >= scroller.duration*scroller.height/scroller.distance){
+                            if(scroller.usedTime >= scroller.duration*scroller.height/scroller.distance){
                                 isNextStart = true;
                             }
                         } else {
@@ -221,7 +221,7 @@
                         break;
                     case 2: {
                         if(this.useHtml5) {
-                            if((time -scroller.startTime) >= scroller.duration*scroller.width/scroller.distance){
+                            if(scroller.usedTime >= scroller.duration*scroller.width/scroller.distance){
                                 isNextStart = true;
                             }
                         } else {
@@ -232,7 +232,7 @@
                         break;
                     default: {
                         if(this.useHtml5) {
-                            if((time -scroller.startTime) >= scroller.duration*scroller.width/scroller.distance){
+                            if(scroller.usedTime >= scroller.duration*scroller.width/scroller.distance){
                                 isNextStart = true;
                             }
                         } else {
