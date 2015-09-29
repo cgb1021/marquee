@@ -35,8 +35,10 @@
         this.height = option.height;
         this.left = option.left; //初始水平位置
         this.top = option.top; //初始垂直位置
-        this.distance = option.distance;
-        this.duration = option.duration;
+        this.distance = option.distance; //移动距离
+        this.duration = option.duration; //移动时间
+        this.direction = option.direction; //移动方向
+        this.useHtml5 = option.useHtml5; //使用html5
 
         this.element.style.width = option.width +'px';
         this.element.style.height = option.height +'px';
@@ -47,8 +49,24 @@
         //恢复初始位置
         this.element.style.left = this.left +'px';
         this.element.style.top = this.top +'px';
-        this.x = this.left; //水平坐标
-        this.y = this.top; //垂直坐标
+        if(this.useHtml5) {
+            this.element.style.transition = 'transform '+this.duration/1000+'s linear';
+            switch(this.direction) {
+                case 1: {}
+                case 3: {
+                    this.element.style.transform = 'translateY(0)';
+                }
+                    break;
+                case 2: {}
+                default:{
+                    this.element.style.transform = 'translateX(0)';
+                }
+            }
+        } else {
+            this.x = this.left; //水平坐标
+            this.y = this.top; //垂直坐标
+        }
+
         //重置时间
         this.startTime = 0; //开始时间
         this.endTime = 0; //到达边缘时间
@@ -90,8 +108,7 @@
 
         this.container.style.overflow = 'hidden';
         nodes = this.container.childNodes;
-        length = nodes.length;
-        for(i = 0; length && i<length; i++)
+        for(i = 0,length = nodes.length; length && i<length; i++)
             this.push(nodes[i]);
     }
     //添加移动对象
@@ -99,7 +116,7 @@
         if(typeof element != 'object' || element.nodeType != 1)
             return null;
 
-        var scroller,time,option={};
+        var scroller,time,option={direction : this.direction,useHtml5:this.useHtml5};
 
         //添加元素
         element.style.position = 'absolute';
@@ -173,60 +190,62 @@
         if(length) {
             //启动下一个对象
             scroller = this.list[length-1];
-            switch(this.direction) {
-                case 1: {
-                    if(this.useHtml5) {
-                        if((time -scroller.startTime) >= scroller.duration*scroller.height/(scroller.height+this.height)){
-                            isNextStart = true;
+            if(scroller.nextSibling && !scroller.nextSibling.startTime) {
+                switch(this.direction) {
+                    case 1: {
+                        if(this.useHtml5) {
+                            if((time -scroller.startTime) >= scroller.duration*scroller.height/scroller.distance){
+                                isNextStart = true;
+                            }
+                        } else {
+                            if((scroller.y+scroller.height) <= this.height)
+                                isNextStart = true;
                         }
-                    } else {
-                        if((scroller.y+scroller.height) <= this.height)
-                            isNextStart = true;
+                    }
+                        break;
+                    case 3: {
+                        if(this.useHtml5) {
+                            if((time -scroller.startTime) >= scroller.duration*scroller.height/scroller.distance){
+                                isNextStart = true;
+                            }
+                        } else {
+                            if(scroller.y >= 0)
+                                isNextStart = true;
+                        }
+                    }
+                        break;
+                    case 2: {
+                        if(this.useHtml5) {
+                            if((time -scroller.startTime) >= scroller.duration*scroller.width/scroller.distance){
+                                isNextStart = true;
+                            }
+                        } else {
+                            if(scroller.x >= 0)
+                                isNextStart = true;
+                        }
+                    }
+                        break;
+                    default: {
+                        if(this.useHtml5) {
+                            if((time -scroller.startTime) >= scroller.duration*scroller.width/scroller.distance){
+                                isNextStart = true;
+                            }
+                        } else {
+                            if((scroller.x+scroller.width) <= this.width)
+                                isNextStart = true;
+                        }
                     }
                 }
-                    break;
-                case 2: {
-                    if(this.useHtml5) {
-                        if((time -scroller.startTime) >= scroller.duration*scroller.width/(scroller.width+this.width)){
-                            isNextStart = true;
-                        }
-                    } else {
-                        if(scroller.x >= 0)
-                            isNextStart = true;
-                    }
+                if(isNextStart) {
+                    scroller = scroller.nextSibling;
+                    this.list.push(scroller);
+                    if(!this.useHtml5)
+                        scroller.startTime = time;
+                    //执行开始事件
+                    if(this.startEvent)
+                        this.startEvent(scroller, time);
+                    length +=1;
                 }
-                    break;
-                case 3: {
-                    if(this.useHtml5) {
-                        if((time -scroller.startTime) >= scroller.duration*scroller.height/(scroller.height+this.height)){
-                            isNextStart = true;
-                        }
-                    } else {
-                        if(scroller.y >= 0)
-                            isNextStart = true;
-                    }
-                }
-                    break;
-                default: {
-                    if(this.useHtml5) {
-                        if((time -scroller.startTime) >= scroller.duration*scroller.width/(scroller.width+this.width)){
-                            isNextStart = true;
-                        }
-                    } else {
-                        if((scroller.x+scroller.width) <= this.width)
-                            isNextStart = true;
-                    }
-                }
-            }
-            scroller = scroller.nextSibling;
-            if(isNextStart && scroller && !scroller.startTime) {
-                this.list.push(scroller);
-                if(!this.useHtml5)
-                    scroller.startTime = time;
-                   //执行开始事件
-                if(this.startEvent)
-                    this.startEvent(scroller, time);
-                length +=1;
             }
 
             for(i=0; i < length; i++){
@@ -243,14 +262,13 @@
                         case 1: {
                             if(this.useHtml5) {
                                 if(!scroller.startTime) {
-                                    scroller.element.style.transition = 'transform '+scroller.duration/1000+'s linear';
-                                    scroller.element.style.transform = 'translateY(-'+(scroller.height+this.height)+'px)';
+                                    scroller.element.style.transform = 'translateY(-' + scroller.distance + 'px)';
                                     scroller.startTime = time;
                                 }
-                                if(i < 2 && !scroller.endTime && (time -scroller.startTime) >= this.duration){
+                                if(i < 2 && !scroller.endTime && scroller.usedTime >= this.duration){
                                     scroller.endTime = time;
                                 }
-                                scroller.usedTime = time-scroller.startTime;
+                                scroller.usedTime += interval;
                             } else {
                                 position = scroller.top-(scroller.distance * (scroller.usedTime+interval)/scroller.duration);
                                 if(i > 0  && this.list[i-1] && (this.list[i-1].y+this.list[i-1].height)>position) {
@@ -271,14 +289,13 @@
                         case 3: {
                             if(this.useHtml5) {
                                 if(!scroller.startTime) {
-                                    scroller.element.style.transition = 'transform ' + scroller.duration / 1000 + 's linear';
-                                    scroller.element.style.transform = 'translateY(' + (scroller.height + this.height) + 'px)';
+                                    scroller.element.style.transform = 'translateY(' + scroller.distance + 'px)';
                                     scroller.startTime = time;
                                 }
-                                if(i < 2 && !scroller.endTime && (time -scroller.startTime) >= this.duration){
+                                if(i < 2 && !scroller.endTime && scroller.usedTime >= this.duration){
                                     scroller.endTime = time;
                                 }
-                                scroller.usedTime = time-scroller.startTime;
+                                scroller.usedTime += interval;
                             } else {
                                 position = scroller.top+(scroller.distance * (scroller.usedTime+interval)/scroller.duration);
                                 if(i > 0  && this.list[i-1] && (position+scroller.height)>this.list[i-1].y) {
@@ -300,14 +317,13 @@
                         case 2: {
                             if(this.useHtml5) {
                                 if(!scroller.startTime) {
-                                    scroller.element.style.transition = 'transform ' + scroller.duration / 1000 + 's linear';
-                                    scroller.element.style.transform = 'translateX(' + (scroller.width + this.width) + 'px)';
+                                    scroller.element.style.transform = 'translateX(' + scroller.distance + 'px)';
                                     scroller.startTime = time;
                                 }
-                                if(i < 2 && !scroller.endTime && (time -scroller.startTime) >= this.duration){
+                                if(i < 2 && !scroller.endTime && scroller.usedTime >= this.duration){
                                     scroller.endTime = time;
                                 }
-                                scroller.usedTime = time-scroller.startTime;
+                                scroller.usedTime += interval;
                             } else {
                                 position = scroller.left+(scroller.distance * (scroller.usedTime+interval)/scroller.duration);
                                 if(i > 0  && this.list[i-1] && (position+scroller.width)>this.list[i-1].x) {
@@ -328,14 +344,13 @@
                         default: {
                             if(this.useHtml5) {
                                 if(!scroller.startTime) {
-                                    scroller.element.style.transition = 'transform '+scroller.duration/1000+'s linear';
-                                    scroller.element.style.transform = 'translateX(-'+(scroller.width+this.width)+'px)';
+                                    scroller.element.style.transform = 'translateX(-' + scroller.distance + 'px)';
                                     scroller.startTime = time;
                                 }
-                                if(i < 2 && !scroller.endTime && (time -scroller.startTime) >= this.duration){
+                                if(i < 2 && !scroller.endTime && scroller.usedTime >= this.duration){
                                     scroller.endTime = time;
                                 }
-                                scroller.usedTime = time-scroller.startTime;
+                                scroller.usedTime += interval;
                             } else {
                                 position = scroller.left-(scroller.distance * (scroller.usedTime+interval)/scroller.duration);
                                 if(i > 0  && this.list[i-1] && (this.list[i-1].x+this.list[i-1].width)>position) {
