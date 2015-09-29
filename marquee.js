@@ -8,6 +8,8 @@
 (function(window){
     var document = window.document;
     var animationFrame = null;
+    var supportHtml5 = true;
+    var marqueeList = {};
     //定义动画执行函数
     if(window.requestAnimationFrame){
         animationFrame = function(callback) {window.requestAnimationFrame(callback);}
@@ -18,25 +20,27 @@
                 animationFrame = function(callback) {window[prefix[i]+'RequestAnimationFrame'](callback);}
                 break;
             }
-        if(!this.animationFrame)
+        if(!this.animationFrame) {
+            supportHtml5 = false;
             animationFrame = function(callback) {window.setTimeout(callback,1000/60)}
+        }
     }
     //移动对象
-    function Scroller(config) {
-        if(!config)
+    function Scroller(option) {
+        if(!option)
             return;
 
         this.nextSibling = null; //下一个移动对象
-        this.element = config.element; //当前dom元素
-        this.width = config.width;
-        this.height = config.height;
-        this.left = config.left; //初始水平位置
-        this.top = config.top; //初始垂直位置
-        this.distance = config.distance;
-        this.duration = config.duration;
+        this.element = option.element; //当前dom元素
+        this.width = option.width;
+        this.height = option.height;
+        this.left = option.left; //初始水平位置
+        this.top = option.top; //初始垂直位置
+        this.distance = option.distance;
+        this.duration = option.duration;
 
-        this.element.style.width = config.width +'px';
-        this.element.style.height = config.height +'px';
+        this.element.style.width = option.width +'px';
+        this.element.style.height = option.height +'px';
         this.reset();
     }
     //重置元素
@@ -58,14 +62,14 @@
         this.nextSibling = null;
     }
     //移动容器对象
-    function Marquee(element, config) {
+    function Marquee(element, option) {
         var nodes, i,length;
         this.list = []; //移动对象列表
         this.container = element; //移动容器
         this.width = element.clientWidth;
         this.height = element.clientHeight;
         this.loop = 0; //循环次数
-        this.duration = 10; //移动持续时间
+        this.duration = element.clientWidth*10; //移动持续时间
         this.direction = 0; //0:从右往左；1:从下往上；2:从左往右；3:从上往下
         this.prevScroller = null; //上一个移动对象
         this.startEvent = null; //移动元素开始事件
@@ -74,13 +78,13 @@
         this.isAsync = false; //移动元素异步执行动画
         this.lastTime = 0; //队列上一次执行时间
         //参数配置
-        if(config) {
-            this.loop = config.loop || this.loop;
-            this.direction = config.direction || this.direction;
-            this.duration = config.duration || this.duration;
-            this.startEvent = config.startEvent || this.startEvent;
-            this.endEvent = config.endEvent || this.endEvent;
-            this.hoverEvent = config.hoverEvent || this.hoverEvent;
+        if(option) {
+            this.loop = option.loop || this.loop;
+            this.direction = option.direction || this.direction;
+            this.duration = option.duration || this.duration;
+            this.startEvent = option.startEvent || this.startEvent;
+            this.endEvent = option.endEvent || this.endEvent;
+            this.hoverEvent = option.hoverEvent || this.hoverEvent;
         }
 
         this.container.style.overflow = 'hidden';
@@ -94,47 +98,47 @@
         if(typeof element != 'object' || element.nodeType != 1)
             return null;
 
-        var scroller,time,config={};
+        var scroller,time,option={};
 
         //添加元素
         element.style.position = 'absolute';
         if(element.parentNode !== this.container) {
             this.container.appendChild(element);
         }
-        config.element = element;
+        option.element = element;
         //记录初始信息
-        config.width = element.offsetWidth;
-        config.height = element.offsetHeight;
-        config.left = element.offsetLeft;
-        config.top = element.offsetTop;
+        option.width = element.offsetWidth;
+        option.height = element.offsetHeight;
+        option.left = element.offsetLeft;
+        option.top = element.offsetTop;
         //确定初始位置
         switch(this.direction) {
             case 1: {
-                config.top = this.height;
-                config.distance = this.height+config.height;
-                config.duration = this.duration/this.height*config.distance;
+                option.top = this.height;
+                option.distance = this.height+option.height;
+                option.duration = this.duration/this.height*option.distance;
             }
                 break;
             case 2: {
-                config.left = -config.width;
-                config.distance = this.width+config.width;
-                config.duration = this.duration/this.width*config.distance;
+                option.left = -option.width;
+                option.distance = this.width+option.width;
+                option.duration = this.duration/this.width*option.distance;
             }
                 break;
             case 3: {
-                config.top = -config.height;
-                config.distance = this.height+config.height;
-                config.duration = this.duration/this.height*config.distance;
+                option.top = -option.height;
+                option.distance = this.height+option.height;
+                option.duration = this.duration/this.height*option.distance;
             }
                 break;
             default: {
-                config.left = this.width;
-                config.distance = this.width+config.width;
-                config.duration = this.duration/this.width*config.distance;
+                option.left = this.width;
+                option.distance = this.width+option.width;
+                option.duration = this.duration/this.width*option.distance;
             }
         }
         //生成一个移动对象
-        scroller = new Scroller(config);
+        scroller = new Scroller(option);
         if(!this.prevScroller) {
             this.lastTime = time = new Date().getTime();
             this.prevScroller = scroller;
@@ -290,5 +294,16 @@
         }
         this.lastTime = time;
     }
-    window.marquee = function(element,config) { return new Marquee(element,config);}
+    window.marquee = function(element,option) {
+        if(typeof element == 'string') {
+            if(marqueeList[element])
+                return marqueeList[element];
+
+            element = document.getElementById(element);
+            if(element) {
+                marqueeList[element.id] = new Marquee(element,option);
+                return marqueeList[element.id];
+            }
+        } else
+            return new Marquee(element,option);}
 })(window)
