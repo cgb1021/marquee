@@ -39,7 +39,7 @@
         this.distance = option.distance; //移动距离
         this.duration = option.duration; //移动时间
         this.direction = option.direction; //移动方向
-        this.useHtml5 = option.useHtml5; //使用html5
+        this.transformEnable = option.transformEnable; //使用html5
 
         this.element.style.width = option.width +'px';
         this.element.style.height = option.height +'px';
@@ -50,7 +50,7 @@
         //恢复初始位置
         this.element.style.left = this.left +'px';
         this.element.style.top = this.top +'px';
-        if(this.useHtml5) {
+        if(this.transformEnable) {
             this.element.style.transition = '';
             switch(this.direction) {
                 case 1: {}
@@ -91,7 +91,7 @@
         this.lastTime = 0; //队列上一次执行时间
         this.loopCounter = 0; //执行次数
         //参数配置
-        this.useHtml5 = !!(supportHtml5 && option.useHtml5); //使用html5
+        this.transformEnable = !!(supportHtml5 && option.transformEnable); //使用html5
         this.loop = typeof option.loop != 'undefined' ? Math.abs(parseInt(option.loop,10)) : 1; //循环次数,0:无限循环;>0:按次数循环
         this.duration = typeof option.duration != 'undefined' ? Math.abs(parseInt(option.duration,10)) : element.clientWidth*10; //移动持续时间
         this.direction = parseInt(option.direction,10) || 0; //0:从右往左；1:从下往上；2:从左往右；3:从上往下
@@ -110,7 +110,7 @@
         if(typeof element != 'object' || element.nodeType != 1)
             return null;
 
-        var moves,time,option={direction : this.direction,useHtml5:this.useHtml5};
+        var moves,time,option={direction : this.direction,transformEnable:this.transformEnable};
 
         //添加元素
         element.style.position = 'absolute';
@@ -157,8 +157,10 @@
             this.loopCounter = 1;
             //启动第一个移动对象
             this.list.push(moves);
-            if(!this.useHtml5)
+            if(!this.transformEnable)
                 moves.startTime = time;
+            else
+                moves.usedTime += 17;
             if(this.startEvent)
                 this.startEvent(moves, time);
             this.animate();
@@ -189,7 +191,7 @@
             if(moves.nextSibling && !moves.nextSibling.startTime) {
                 switch(this.direction) {
                     case 1: {
-                        if(this.useHtml5) {
+                        if(this.transformEnable) {
                             if(moves.usedTime >= moves.duration*moves.height/moves.distance){
                                 isNextStart = true;
                             }
@@ -200,7 +202,7 @@
                     }
                         break;
                     case 3: {
-                        if(this.useHtml5) {
+                        if(this.transformEnable) {
                             if(moves.usedTime >= moves.duration*moves.height/moves.distance){
                                 isNextStart = true;
                             }
@@ -211,7 +213,7 @@
                     }
                         break;
                     case 2: {
-                        if(this.useHtml5) {
+                        if(this.transformEnable) {
                             if(moves.usedTime >= moves.duration*moves.width/moves.distance){
                                 isNextStart = true;
                             }
@@ -222,7 +224,7 @@
                     }
                         break;
                     default: {
-                        if(this.useHtml5) {
+                        if(this.transformEnable) {
                             if(moves.usedTime >= moves.duration*moves.width/moves.distance){
                                 isNextStart = true;
                             }
@@ -235,7 +237,7 @@
                 if(isNextStart) {
                     moves = moves.nextSibling;
                     this.list.push(moves);
-                    if(!this.useHtml5)
+                    if(!this.transformEnable)
                         moves.startTime = time;
                     //执行开始事件
                     if(this.startEvent)
@@ -260,17 +262,17 @@
                     }
 
                     this.list[i] = null;
-                } else if(moves.reachTime && !this.useHtml5 && this.reachEvent && this.reachEvent(moves, time)) {
+                } else if(moves.reachTime && !this.transformEnable && this.reachEvent && this.reachEvent(moves, time)) {
                     //到达边缘暂停
                 } else {
                     //正常流程
                     switch(this.direction) {
                         case 1: {
-                            if(this.useHtml5) {
+                            if(this.transformEnable) {
                                 if(!moves.startTime) {
+                                    moves.startTime = time;
                                     moves.element.style.transition = 'transform '+moves.duration/1000+'s linear';
                                     moves.element.style.transform = 'translateY(-' + moves.distance + 'px)';
-                                    moves.startTime = time;
                                 }
                                 if(i < 2 && !moves.reachTime && moves.usedTime >= this.duration){
                                     moves.reachTime = time;
@@ -294,11 +296,11 @@
                         }
                             break;
                         case 3: {
-                            if(this.useHtml5) {
+                            if(this.transformEnable) {
                                 if(!moves.startTime) {
+                                    moves.startTime = time;
                                     moves.element.style.transition = 'transform '+moves.duration/1000+'s linear';
                                     moves.element.style.transform = 'translateY(' + moves.distance + 'px)';
-                                    moves.startTime = time;
                                 }
                                 if(i < 2 && !moves.reachTime && moves.usedTime >= this.duration){
                                     moves.reachTime = time;
@@ -322,11 +324,11 @@
                         }
                             break;
                         case 2: {
-                            if(this.useHtml5) {
+                            if(this.transformEnable) {
                                 if(!moves.startTime) {
+                                    moves.startTime = time;
                                     moves.element.style.transition = 'transform '+moves.duration/1000+'s linear';
                                     moves.element.style.transform = 'translateX(' + moves.distance + 'px)';
-                                    moves.startTime = time;
                                 }
                                 if(i < 2 && !moves.reachTime && moves.usedTime >= this.duration){
                                     moves.reachTime = time;
@@ -350,11 +352,11 @@
                         }
                             break;
                         default: {
-                            if(this.useHtml5) {
+                            if(this.transformEnable) {
                                 if(!moves.startTime) {
+                                    moves.startTime = time;
                                     moves.element.style.transition = 'transform '+moves.duration/1000+'s linear';
                                     moves.element.style.transform = 'translateX(-' + moves.distance + 'px)';
-                                    moves.startTime = time;
                                 }
                                 if(i < 2 && !moves.reachTime && moves.usedTime >= this.duration){
                                     moves.reachTime = time;
@@ -389,7 +391,7 @@
                 //重新启动
                 moves = this.fistMoves;
                 this.list.push(moves);
-                if(!this.useHtml5)
+                if(!this.transformEnable)
                     moves.startTime = time;
                 if(this.startEvent)
                     this.startEvent(moves, time);
@@ -403,6 +405,7 @@
         } else {
             //空队列，动画结束，执行回调函数
             this.prevMoves = null;
+            this.fistMoves = null;
         }
         this.lastTime = time;
     }
