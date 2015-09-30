@@ -110,7 +110,7 @@
         if(typeof element != 'object' || element.nodeType != 1)
             return null;
 
-        var scroller,time,option={direction : this.direction,useHtml5:this.useHtml5};
+        var moves,time,option={direction : this.direction,useHtml5:this.useHtml5};
 
         //添加元素
         element.style.position = 'absolute';
@@ -150,32 +150,32 @@
             }
         }
         //生成一个移动对象
-        scroller = new Moves(option);
+        moves = new Moves(option);
         if(!this.prevMoves) {
             this.lastTime = time = new Date().getTime();
-            this.fistMoves = this.prevMoves = scroller;
+            this.fistMoves = this.prevMoves = moves;
             this.loopCounter = 1;
             //启动第一个移动对象
-            this.list.push(scroller);
+            this.list.push(moves);
             if(!this.useHtml5)
-                scroller.startTime = time;
+                moves.startTime = time;
             if(this.startEvent)
-                this.startEvent(scroller, time);
+                this.startEvent(moves, time);
             this.animate();
         } else {
-            this.prevMoves.nextSibling = scroller;
-            this.prevMoves = scroller;
+            this.prevMoves.nextSibling = moves;
+            this.prevMoves = moves;
         }
-        this.prevMoves = scroller;
+        this.prevMoves = moves;
 
-        scroller = null;
+        moves = null;
         element = null;
     }
     //执行动画
     Marquee.prototype.animate = function() {
         var _this = this, //保存执行环境
             time = new Date().getTime(), //当前执行时间,
-            scroller = null,
+            moves = null,
             position = 0, //移动位置
             isNextStart = false,
             interval = time-this.lastTime, //和上一次的执行间隔
@@ -184,202 +184,201 @@
 
         if(length) {
             //启动下一个对象
-            scroller = this.list[length-1];
+            moves = this.list[length-1];
 
-            if(scroller.nextSibling && !scroller.nextSibling.startTime) {
+            if(moves.nextSibling && !moves.nextSibling.startTime) {
                 switch(this.direction) {
                     case 1: {
                         if(this.useHtml5) {
-                            if(scroller.usedTime >= scroller.duration*scroller.height/scroller.distance){
+                            if(moves.usedTime >= moves.duration*moves.height/moves.distance){
                                 isNextStart = true;
                             }
                         } else {
-                            if((scroller.y+scroller.height) <= this.height)
+                            if((moves.y+moves.height) <= this.height)
                                 isNextStart = true;
                         }
                     }
                         break;
                     case 3: {
                         if(this.useHtml5) {
-                            if(scroller.usedTime >= scroller.duration*scroller.height/scroller.distance){
+                            if(moves.usedTime >= moves.duration*moves.height/moves.distance){
                                 isNextStart = true;
                             }
                         } else {
-                            if(scroller.y >= 0)
+                            if(moves.y >= 0)
                                 isNextStart = true;
                         }
                     }
                         break;
                     case 2: {
                         if(this.useHtml5) {
-                            if(scroller.usedTime >= scroller.duration*scroller.width/scroller.distance){
+                            if(moves.usedTime >= moves.duration*moves.width/moves.distance){
                                 isNextStart = true;
                             }
                         } else {
-                            if(scroller.x >= 0)
+                            if(moves.x >= 0)
                                 isNextStart = true;
                         }
                     }
                         break;
                     default: {
                         if(this.useHtml5) {
-                            if(scroller.usedTime >= scroller.duration*scroller.width/scroller.distance){
+                            if(moves.usedTime >= moves.duration*moves.width/moves.distance){
                                 isNextStart = true;
                             }
                         } else {
-                            if((scroller.x+scroller.width) <= this.width)
+                            if((moves.x+moves.width) <= this.width)
                                 isNextStart = true;
                         }
                     }
                 }
                 if(isNextStart) {
-                    scroller = scroller.nextSibling;
-                    this.list.push(scroller);
+                    moves = moves.nextSibling;
+                    this.list.push(moves);
                     if(!this.useHtml5)
-                        scroller.startTime = time;
+                        moves.startTime = time;
                     //执行开始事件
                     if(this.startEvent)
-                        this.startEvent(scroller, time);
+                        this.startEvent(moves, time);
                     length +=1;
                 }
             }
 
             for(i=0; i < length; i++){
-                scroller = this.list[i];
-                if(scroller.usedTime > scroller.duration) {
+                moves = this.list[i];
+                if(moves.usedTime > moves.duration) {
                     //到达终点，清理元素
                     if(this.endEvent) {
-                        this.endEvent(scroller, time);
+                        this.endEvent(moves, time);
                     }
                     if(this.loop === 0 || this.loopCounter<this.loop) {
                         //重置元素
-                        scroller.reset();
+                        moves.reset();
                     } else {
                         //清理元素
-                        scroller.destroy();
+                        moves.destroy();
                     }
 
                     this.list[i] = null;
-                } else if(scroller.reachTime && !this.useHtml5 && this.reachEvent && this.reachEvent(scroller, time)) {
+                } else if(moves.reachTime && !this.useHtml5 && this.reachEvent && this.reachEvent(moves, time)) {
                     //到达边缘暂停
                 } else {
                     //正常流程
                     switch(this.direction) {
                         case 1: {
                             if(this.useHtml5) {
-                                if(!scroller.startTime) {
-                                    scroller.element.style.transition = 'transform '+scroller.duration/1000+'s linear';
-                                    scroller.element.style.transform = 'translateY(-' + scroller.distance + 'px)';
-                                    scroller.startTime = time;
+                                if(!moves.startTime) {
+                                    moves.element.style.transition = 'transform '+moves.duration/1000+'s linear';
+                                    moves.element.style.transform = 'translateY(-' + moves.distance + 'px)';
+                                    moves.startTime = time;
                                 }
-                                if(i < 2 && !scroller.reachTime && scroller.usedTime >= this.duration){
-                                    scroller.reachTime = time;
+                                if(i < 2 && !moves.reachTime && moves.usedTime >= this.duration){
+                                    moves.reachTime = time;
                                 }
-                                scroller.usedTime += interval;
+                                moves.usedTime += interval;
                             } else {
-                                position = scroller.top-(scroller.distance * (scroller.usedTime+interval)/scroller.duration);
+                                position = moves.top-(moves.distance * (moves.usedTime+interval)/moves.duration);
                                 if(i > 0  && this.list[i-1] && (this.list[i-1].y+this.list[i-1].height)>position) {
                                     //和前一个元素重叠，暂停
                                 } else {
-                                    if(i < 2 && !scroller.reachTime && position<=0) {
+                                    if(i < 2 && !moves.reachTime && position<=0) {
                                         //到达边缘
-                                        scroller.reachTime = time;
+                                        moves.reachTime = time;
                                         position = 0;
                                     }
-                                    scroller.y = position;
-                                    scroller.element.style.top = position+'px';
-                                    scroller.usedTime += interval;
+                                    moves.y = position;
+                                    moves.element.style.top = position+'px';
+                                    moves.usedTime += interval;
                                 }
                             }
                         }
                             break;
                         case 3: {
                             if(this.useHtml5) {
-                                if(!scroller.startTime) {
-                                    scroller.element.style.transition = 'transform '+scroller.duration/1000+'s linear';
-                                    scroller.element.style.transform = 'translateY(' + scroller.distance + 'px)';
-                                    scroller.startTime = time;
+                                if(!moves.startTime) {
+                                    moves.element.style.transition = 'transform '+moves.duration/1000+'s linear';
+                                    moves.element.style.transform = 'translateY(' + moves.distance + 'px)';
+                                    moves.startTime = time;
                                 }
-                                if(i < 2 && !scroller.reachTime && scroller.usedTime >= this.duration){
-                                    scroller.reachTime = time;
+                                if(i < 2 && !moves.reachTime && moves.usedTime >= this.duration){
+                                    moves.reachTime = time;
                                 }
-                                scroller.usedTime += interval;
+                                moves.usedTime += interval;
                             } else {
-                                position = scroller.top+(scroller.distance * (scroller.usedTime+interval)/scroller.duration);
-                                if(i > 0  && this.list[i-1] && (position+scroller.height)>this.list[i-1].y) {
+                                position = moves.top+(moves.distance * (moves.usedTime+interval)/moves.duration);
+                                if(i > 0  && this.list[i-1] && (position+moves.height)>this.list[i-1].y) {
                                     //和前一个元素重叠，暂停
                                 } else {
-                                    if(i < 2 && !scroller.reachTime && position>=(this.height-scroller.height)) {
+                                    if(i < 2 && !moves.reachTime && position>=(this.height-moves.height)) {
                                         //到达边缘
-                                        scroller.reachTime = time;
-                                        position = this.height-scroller.height;
+                                        moves.reachTime = time;
+                                        position = this.height-moves.height;
                                     }
-                                    scroller.y = position;
-                                    scroller.element.style.top = position+'px';
-                                    scroller.usedTime += interval;
+                                    moves.y = position;
+                                    moves.element.style.top = position+'px';
+                                    moves.usedTime += interval;
                                 }
                             }
                         }
                             break;
                         case 2: {
                             if(this.useHtml5) {
-                                if(!scroller.startTime) {
-                                    scroller.element.style.transition = 'transform '+scroller.duration/1000+'s linear';
-                                    scroller.element.style.transform = 'translateX(' + scroller.distance + 'px)';
-                                    scroller.startTime = time;
+                                if(!moves.startTime) {
+                                    moves.element.style.transition = 'transform '+moves.duration/1000+'s linear';
+                                    moves.element.style.transform = 'translateX(' + moves.distance + 'px)';
+                                    moves.startTime = time;
                                 }
-                                if(i < 2 && !scroller.reachTime && scroller.usedTime >= this.duration){
-                                    scroller.reachTime = time;
+                                if(i < 2 && !moves.reachTime && moves.usedTime >= this.duration){
+                                    moves.reachTime = time;
                                 }
-                                scroller.usedTime += interval;
+                                moves.usedTime += interval;
                             } else {
-                                position = scroller.left+(scroller.distance * (scroller.usedTime+interval)/scroller.duration);
-                                if(i > 0  && this.list[i-1] && (position+scroller.width)>this.list[i-1].x) {
+                                position = moves.left+(moves.distance * (moves.usedTime+interval)/moves.duration);
+                                if(i > 0  && this.list[i-1] && (position+moves.width)>this.list[i-1].x) {
                                     //和前一个元素重叠，暂停
                                 } else {
-                                    if(i < 2 && !scroller.reachTime && position>=(this.width-scroller.width)) {
+                                    if(i < 2 && !moves.reachTime && position>=(this.width-moves.width)) {
                                         //到达边缘
-                                        scroller.reachTime = time;
-                                        position = this.width-scroller.width;
+                                        moves.reachTime = time;
+                                        position = this.width-moves.width;
                                     }
-                                    scroller.x = position;
-                                    scroller.element.style.left = position+'px';
-                                    scroller.usedTime += interval;
+                                    moves.x = position;
+                                    moves.element.style.left = position+'px';
+                                    moves.usedTime += interval;
                                 }
                             }
                         }
                             break;
                         default: {
                             if(this.useHtml5) {
-                                if(!scroller.startTime) {
-                                    scroller.element.style.transition = 'transform '+scroller.duration/1000+'s linear';
-                                    scroller.element.style.transform = 'translateX(-' + scroller.distance + 'px)';
-                                    scroller.startTime = time;
+                                if(!moves.startTime) {
+                                    moves.element.style.transition = 'transform '+moves.duration/1000+'s linear';
+                                    moves.element.style.transform = 'translateX(-' + moves.distance + 'px)';
+                                    moves.startTime = time;
                                 }
-                                if(i < 2 && !scroller.reachTime && scroller.usedTime >= this.duration){
-                                    scroller.reachTime = time;
+                                if(i < 2 && !moves.reachTime && moves.usedTime >= this.duration){
+                                    moves.reachTime = time;
                                 }
-                                scroller.usedTime += interval;
+                                moves.usedTime += interval;
                             } else {
-                                position = scroller.left-(scroller.distance * (scroller.usedTime+interval)/scroller.duration);
+                                position = moves.left-(moves.distance * (moves.usedTime+interval)/moves.duration);
                                 if(i > 0  && this.list[i-1] && (this.list[i-1].x+this.list[i-1].width)>position) {
                                     //和前一个元素重叠，暂停
                                 } else {
-                                    if(i < 2 && !scroller.reachTime && position<=0) {
+                                    if(i < 2 && !moves.reachTime && position<=0) {
                                         //到达边缘
-                                        scroller.reachTime = time;
+                                        moves.reachTime = time;
                                         position = 0;
                                     }
-                                    scroller.x = position;
-                                    scroller.element.style.left = position+'px';
-                                    scroller.usedTime += interval;
+                                    moves.x = position;
+                                    moves.element.style.left = position+'px';
+                                    moves.usedTime += interval;
                                 }
                             }
                         }
                     }
                 }
             }
-            scroller = null;
             //清理无效元素
             while(this.list.length && !this.list[0]) {
                 this.list.shift();
@@ -388,18 +387,19 @@
                 animationFrame(function(){_this.animate();});
             } else if(this.loop === 0 || this.loopCounter++<this.loop) {
                 //重新启动
-                scroller = this.fistMoves;
-                this.list.push(scroller);
+                moves = this.fistMoves;
+                this.list.push(moves);
                 if(!this.useHtml5)
-                    scroller.startTime = time;
+                    moves.startTime = time;
                 if(this.startEvent)
-                    this.startEvent(scroller, time);
+                    this.startEvent(moves, time);
                 animationFrame(function(){_this.animate();});
             } else {
                 //todo: 空队列，动画结束，执行回调函数
                 this.prevMoves = null;
                 this.fistMoves = null;
             }
+            moves = null;
         } else {
             //空队列，动画结束，执行回调函数
             this.prevMoves = null;
