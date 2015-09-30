@@ -12,20 +12,21 @@
     //定义动画执行函数
     if(window.requestAnimationFrame){
         supportHtml5 = true; //只支持标准模式
-        animationFrame = function(callback) {window.requestAnimationFrame(callback);}
+        animationFrame = window.requestAnimationFrame;
     } else {
         var prefix = ['webkit','moz','ms','o'];
-        for(var i = 0; i < prefix.length;i++)
+        for(var i = 0; i < prefix.length;i++) {
             if(window[prefix[i]+'RequestAnimationFrame']) {
-                animationFrame = function(callback) {window[prefix[i]+'RequestAnimationFrame'](callback);}
+                animationFrame = window[prefix[i]+'RequestAnimationFrame'];
                 break;
             }
-        if(!this.animationFrame) {
+        }
+        if(!animationFrame) {
             animationFrame = function(callback) {window.setTimeout(callback,1000/60)}
         }
     }
     //移动对象
-    function Scroller(option) {
+    function Moves(option) {
         if(!option)
             return;
 
@@ -45,7 +46,7 @@
         this.reset();
     }
     //重置元素
-    Scroller.prototype.reset = function() {
+    Moves.prototype.reset = function() {
         //恢复初始位置
         this.element.style.left = this.left +'px';
         this.element.style.top = this.top +'px';
@@ -73,7 +74,7 @@
         this.usedTime = 0; //移动时间
     }
     //销毁元素
-    Scroller.prototype.destroy = function(){
+    Moves.prototype.destroy = function(){
         this.element.parentNode.removeChild(this.element);
         this.element = null;
         this.nextSibling = null;
@@ -83,31 +84,21 @@
         var nodes, i,length;
         this.list = []; //移动对象列表
         this.container = element; //移动容器
-        this.width = element.clientWidth;
-        this.height = element.clientHeight;
-        this.loop = 1; //循环次数,0:无限循环;>0:按次数循环
-        this.duration = element.clientWidth*10; //移动持续时间
-        this.direction = 0; //0:从右往左；1:从下往上；2:从左往右；3:从上往下
-        this.prevScroller = null; //上一个移动对象
-        this.fistScroller = null; //第一个对象
-        this.startEvent = null; //移动元素开始事件
-        this.endEvent = null; //移动结束事件
-        this.reachEvent = null; //移动元素到达边缘事件,return true的时候到达边缘后暂停
-        this.hoverEvent = null; //移动元素鼠标悬停事件
+        this.width = element.clientWidth; //容器宽度
+        this.height = element.clientHeight; //容器高度
+        this.prevMoves = null; //上一个移动对象
+        this.fistMoves = null; //第一个移动对象
         this.lastTime = 0; //队列上一次执行时间
-        this.useHtml5 = false; //使用html5
         this.loopCounter = 0; //执行次数
         //参数配置
-        if(option) {
-            this.useHtml5 = !!(supportHtml5 && option.useHtml5);
-            this.loop = typeof option.loop != 'undefined'?parseInt(option.loop,10):1;
-            this.direction = parseInt(option.direction,10) || this.direction;
-            this.duration = parseInt(option.duration,10) || this.duration;
-            this.startEvent = option.startEvent || this.startEvent;
-            this.endEvent = option.endEvent || this.endEvent;
-            this.reachEvent = option.reachEvent || this.reachEvent;
-            this.hoverEvent = option.hoverEvent || this.hoverEvent;
-        }
+        this.useHtml5 = !!(supportHtml5 && option.useHtml5); //使用html5
+        this.loop = typeof option.loop != 'undefined' ? Math.abs(parseInt(option.loop,10)) : 1; //循环次数,0:无限循环;>0:按次数循环
+        this.duration = typeof option.duration != 'undefined' ? Math.abs(parseInt(option.duration,10)) : element.clientWidth*10; //移动持续时间
+        this.direction = parseInt(option.direction,10) || 0; //0:从右往左；1:从下往上；2:从左往右；3:从上往下
+        this.startEvent = option.startEvent || null; //移动元素开始事件
+        this.endEvent = option.endEvent || null; //移动结束事件
+        this.reachEvent = option.reachEvent || null; //移动元素到达边缘事件,return true的时候到达边缘后暂停
+        this.hoverEvent = option.hoverEvent || null; //移动元素鼠标悬停事件
 
         this.container.style.overflow = 'hidden';
         nodes = this.container.childNodes;
@@ -159,10 +150,10 @@
             }
         }
         //生成一个移动对象
-        scroller = new Scroller(option);
-        if(!this.prevScroller) {
+        scroller = new Moves(option);
+        if(!this.prevMoves) {
             this.lastTime = time = new Date().getTime();
-            this.fistScroller = this.prevScroller = scroller;
+            this.fistMoves = this.prevMoves = scroller;
             this.loopCounter = 1;
             //启动第一个移动对象
             this.list.push(scroller);
@@ -172,10 +163,10 @@
                 this.startEvent(scroller, time);
             this.animate();
         } else {
-            this.prevScroller.nextSibling = scroller;
-            this.prevScroller = scroller;
+            this.prevMoves.nextSibling = scroller;
+            this.prevMoves = scroller;
         }
-        this.prevScroller = scroller;
+        this.prevMoves = scroller;
 
         scroller = null;
         element = null;
@@ -277,7 +268,7 @@
                         case 1: {
                             if(this.useHtml5) {
                                 if(!scroller.startTime) {
-                                    scroller.element.style.transition = 'transform '+this.duration/1000+'s linear';
+                                    scroller.element.style.transition = 'transform '+scroller.duration/1000+'s linear';
                                     scroller.element.style.transform = 'translateY(-' + scroller.distance + 'px)';
                                     scroller.startTime = time;
                                 }
@@ -305,7 +296,7 @@
                         case 3: {
                             if(this.useHtml5) {
                                 if(!scroller.startTime) {
-                                    scroller.element.style.transition = 'transform '+this.duration/1000+'s linear';
+                                    scroller.element.style.transition = 'transform '+scroller.duration/1000+'s linear';
                                     scroller.element.style.transform = 'translateY(' + scroller.distance + 'px)';
                                     scroller.startTime = time;
                                 }
@@ -328,13 +319,12 @@
                                     scroller.usedTime += interval;
                                 }
                             }
-
                         }
                             break;
                         case 2: {
                             if(this.useHtml5) {
                                 if(!scroller.startTime) {
-                                    scroller.element.style.transition = 'transform '+this.duration/1000+'s linear';
+                                    scroller.element.style.transition = 'transform '+scroller.duration/1000+'s linear';
                                     scroller.element.style.transform = 'translateX(' + scroller.distance + 'px)';
                                     scroller.startTime = time;
                                 }
@@ -362,7 +352,7 @@
                         default: {
                             if(this.useHtml5) {
                                 if(!scroller.startTime) {
-                                    scroller.element.style.transition = 'transform '+this.duration/1000+'s linear';
+                                    scroller.element.style.transition = 'transform '+scroller.duration/1000+'s linear';
                                     scroller.element.style.transform = 'translateX(-' + scroller.distance + 'px)';
                                     scroller.startTime = time;
                                 }
@@ -398,7 +388,7 @@
                 animationFrame(function(){_this.animate();});
             } else if(this.loop === 0 || this.loopCounter++<this.loop) {
                 //重新启动
-                scroller = this.fistScroller;
+                scroller = this.fistMoves;
                 this.list.push(scroller);
                 if(!this.useHtml5)
                     scroller.startTime = time;
@@ -407,12 +397,12 @@
                 animationFrame(function(){_this.animate();});
             } else {
                 //todo: 空队列，动画结束，执行回调函数
-                this.prevScroller = null;
-                this.fistScroller = null;
+                this.prevMoves = null;
+                this.fistMoves = null;
             }
         } else {
             //空队列，动画结束，执行回调函数
-            this.prevScroller = null;
+            this.prevMoves = null;
         }
         this.lastTime = time;
     }
