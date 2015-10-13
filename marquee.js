@@ -6,18 +6,23 @@
  * Released under the MIT license - http://opensource.org/licenses/MIT
  */
 (function(window){
-    var animationFrame = null;
-    var supportHtml5 = false;
-    var marqueeList = {};
+    var animationFrame = null; //window.requestAnimationFrame
+    var supportHtml5 = false; //是否支持标准html5
+    var transitionEnd = ''; //transitionEnd字符串
+    var transitionEndEvent = null; //transitionEnd事件
+    var marqueeList = {}; //缓存marquee对象
     //定义动画执行函数
     if(window.requestAnimationFrame){
-        supportHtml5 = true; //只支持标准模式
+        supportHtml5 = true;
         animationFrame = window.requestAnimationFrame;
+        transitionEnd = 'transitionend';
     } else {
-        var prefix = ['webkit','moz','ms','o'];
-        for(var i = 0; i < prefix.length;i++) {
-            if(window[prefix[i]+'RequestAnimationFrame']) {
-                animationFrame = window[prefix[i]+'RequestAnimationFrame'];
+        var prefixs = ['webkit','moz','ms','o'];
+        for(var i = 0; i < prefixs.length;i++) {
+            if(window[prefixs[i]+'RequestAnimationFrame']) {
+                animationFrame = window[prefixs[i]+'RequestAnimationFrame'];
+                transitionEnd = prefixs[i]+'TransitionEnd';
+                supportHtml5 = true;
                 break;
             }
         }
@@ -25,11 +30,38 @@
             animationFrame = function(callback) {window.setTimeout(callback,1000/60)}
         }
     }
+    if(transitionEnd) {
+        transitionEndEvent = function(e) {
+            this.isEnd = true;
+        }
+    }
+    //addEventListener
+    var addEvent = (function(){
+        return window.addEventListener?
+            function(dom, type, fn){dom.addEventListener(type, fn);}:
+            (window.attachEvent?
+                function(dom, type, fn){dom.attachEvent('on'+type, fn)}:
+                function(dom, type, fn){dom['on'+type]= fn});
+    })();
+    //removeEventListener
+    var removeEvent = (function(){
+        return window.removeEventListener?
+            function(dom, type, fn){dom.removeEventListener(type, fn);}:
+            (window.detachEvent?
+                function(dom, type, fn){dom.detachEvent('on'+type, fn)}:
+                function(dom, type){dom['on'+type]= null});
+    })();
+    //绑定环境
+    var bind = function(context, fn) {
+        return function(){fn.apply(context, arguments)};
+    }
     //移动对象
     function Moves(option) {
         if(!option)
             return;
 
+        this.isInit = false; //用于判断第一次绑定transitionEnd事件
+        this.isEnd = false; //transform模式下是否到达尽头
         this.nextSibling = null; //下一个移动对象
         this.element = option.element; //当前dom元素
         this.width = option.width;
@@ -47,6 +79,10 @@
     }
     //重置元素
     Moves.prototype.reset = function() {
+        if(this.transformEnable && !this.isInit) {
+            addEvent(this.element, transitionEnd, bind(this, transitionEndEvent));
+            this.isInit = true;
+        }
         //恢复初始位置
         this.element.style.left = this.left +'px';
         this.element.style.top = this.top +'px';
@@ -67,7 +103,7 @@
             this.x = this.left; //水平坐标
             this.y = this.top; //垂直坐标
         }
-
+        this.isEnd = false;
         //重置时间
         this.startTime = 0; //开始时间
         this.reachTime = 0; //到达边缘时间
@@ -75,6 +111,9 @@
     }
     //销毁元素
     Moves.prototype.destroy = function(){
+        if(this.transformEnable) {
+           removeEvent(this.element, transitionEnd, bind(this, transitionEndEvent));
+        }
         this.element.parentNode.removeChild(this.element);
         this.element = null;
         this.nextSibling = null;
@@ -184,6 +223,7 @@
             i = 0,
             length = this.list.length;
 
+        this.lastTime = time;
         if(length) {
             //启动下一个对象
             moves = this.list[length-1];
@@ -248,7 +288,7 @@
 
             for(i=0; i < length; i++){
                 moves = this.list[i];
-                if(moves.usedTime > moves.duration) {
+                if(moves.isEnd || moves.usedTime > moves.duration) {
                     //到达终点，清理元素
                     if(this.endEvent) {
                         this.endEvent(moves, time);
@@ -260,7 +300,6 @@
                         //清理元素
                         moves.destroy();
                     }
-
                     this.list[i] = null;
                 } else if(moves.reachTime && !this.transformEnable && this.reachEvent && this.reachEvent(moves, time)) {
                     //到达边缘暂停
@@ -407,7 +446,6 @@
             this.prevMoves = null;
             this.fistMoves = null;
         }
-        this.lastTime = time;
     }
     window.marquee = function(element,option) {
         if(typeof element == 'string') {
