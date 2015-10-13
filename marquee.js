@@ -288,7 +288,7 @@
 
             for(i=0; i < length; i++){
                 moves = this.list[i];
-                if(moves.isEnd || moves.usedTime > moves.duration) {
+                if(moves.isEnd) {
                     //到达终点，清理元素
                     if(this.endEvent) {
                         this.endEvent(moves, time);
@@ -330,6 +330,8 @@
                                     moves.y = position;
                                     moves.element.style.top = position+'px';
                                     moves.usedTime += interval;
+                                    if(position<=-moves.height)
+                                        moves.isEnd = true;
                                 }
                             }
                         }
@@ -358,6 +360,8 @@
                                     moves.y = position;
                                     moves.element.style.top = position+'px';
                                     moves.usedTime += interval;
+                                    if(position>=this.height)
+                                        moves.isEnd = true;
                                 }
                             }
                         }
@@ -386,6 +390,8 @@
                                     moves.x = position;
                                     moves.element.style.left = position+'px';
                                     moves.usedTime += interval;
+                                    if(position>=this.width)
+                                        moves.isEnd = true;
                                 }
                             }
                         }
@@ -414,6 +420,8 @@
                                     moves.x = position;
                                     moves.element.style.left = position+'px';
                                     moves.usedTime += interval;
+                                    if(position<=-moves.width)
+                                        moves.isEnd = true;
                                 }
                             }
                         }
