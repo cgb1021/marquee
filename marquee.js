@@ -116,6 +116,7 @@
         this.element = null;
         this.nextSibling = null;
     }
+
     /*
      * 移动容器对象
      *
@@ -126,8 +127,8 @@
      *                            direction: 0, //0:从右往左；1:从下往上；2:从左往右；3:从上往下
      *                            startEvent: function(){}, //移动开始事件
      *                            endEvent: function(){}, //移动结束事件
-     *                            reachEvent: function(){}, //移动元素到达边缘事件，return true的时候到达边缘后暂停。只支持位移(left/top)模式
-     *                            hoverEvent: function(){} //移动元素鼠标悬停事件。只支持位移(left/top)模式
+     *                            reachEvent: function(){}, //移动元素到达边缘事件，return true的时候到达边缘后暂停。只支持位移(left/top)模式。根本停不下来
+     *                            hoverEvent: function(){} //移动元素鼠标悬停事件。只支持位移(left/top)模式。根本停不下来
      *                            }
      */
     function Marquee(element, option) {
@@ -251,13 +252,13 @@
             moves = this.list[length-1];
 
             if(moves.status === 0) {
-                //第一个moves
+                //启动第一个moves
                 if(!this.transformEnable)
                     moves.status = 1;
                 //执行开始事件
                 if(this.startEvent)
                     this.startEvent(moves, time);
-            } else if(moves.nextSibling && !moves.nextSibling.isStart) {
+            } else if(moves.nextSibling && moves.nextSibling.status === 0) {
                 switch(this.direction) {
                     case 1: {
                         if(this.transformEnable) {
@@ -342,10 +343,11 @@
                                     moves.status = 1;
                                     moves.element.style.transition = 'transform '+moves.duration/1000+'s linear';
                                     moves.element.style.transform = 'translateY(-' + moves.distance + 'px)';
-                                }
-                                if(i < 2 && !moves.reachTime && moves.usedTime >= this.duration){
+                                } else if(i < 2 && !moves.reachTime && moves.usedTime >= this.duration){
                                     //到达边缘
                                     moves.reachTime = time;
+                                    if(this.reachEvent)
+                                        this.reachEvent(moves, time)
                                 }
                                 moves.usedTime += interval;
                             } else {
@@ -373,10 +375,11 @@
                                     moves.status = 1;
                                     moves.element.style.transition = 'transform '+moves.duration/1000+'s linear';
                                     moves.element.style.transform = 'translateY(' + moves.distance + 'px)';
-                                }
-                                if(i < 2 && !moves.reachTime && moves.usedTime >= this.duration){
+                                } else if(i < 2 && !moves.reachTime && moves.usedTime >= this.duration){
                                     //到达边缘
                                     moves.reachTime = time;
+                                    if(this.reachEvent)
+                                        this.reachEvent(moves, time)
                                 }
                                 moves.usedTime += interval;
                             } else {
@@ -404,10 +407,11 @@
                                     moves.status = 1;
                                     moves.element.style.transition = 'transform '+moves.duration/1000+'s linear';
                                     moves.element.style.transform = 'translateX(' + moves.distance + 'px)';
-                                }
-                                if(i < 2 && !moves.reachTime && moves.usedTime >= this.duration){
+                                } else if(i < 2 && !moves.reachTime && moves.usedTime >= this.duration){
                                     //到达边缘
                                     moves.reachTime = time;
+                                    if(this.reachEvent)
+                                        this.reachEvent(moves, time)
                                 }
                                 moves.usedTime += interval;
                             } else {
@@ -435,10 +439,11 @@
                                     moves.status = 1;
                                     moves.element.style.transition = 'transform '+moves.duration/1000+'s linear';
                                     moves.element.style.transform = 'translateX(-' + moves.distance + 'px)';
-                                }
-                                if(i < 2 && !moves.reachTime && moves.usedTime >= this.duration){
+                                } else if(i < 2 && !moves.reachTime && moves.usedTime >= this.duration){
                                     //到达边缘
                                     moves.reachTime = time;
+                                    if(this.reachEvent)
+                                        this.reachEvent(moves, time)
                                 }
                                 moves.usedTime += interval;
                             } else {
