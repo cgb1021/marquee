@@ -32,7 +32,7 @@
     }
     if(transitionEnd) {
         transitionEndEvent = function(e) {
-            this.status = 2;
+            this.status = 9;
         }
     }
     //addEventListener
@@ -61,7 +61,7 @@
             return;
 
         this.isInit = false; //用于判断第一次绑定transitionEnd事件
-        this.status = 0; //0,未开始;1,开始;2,到达尽头
+        this.status = 0; //0,未开始;1,开始;9,到达尽头
         this.nextSibling = null; //下一个移动对象
         this.element = option.element; //当前dom元素
         this.width = option.width;
@@ -73,6 +73,7 @@
         this.direction = option.direction; //移动方向
         this.transformEnable = option.transformEnable; //使用html5
 
+        this.element.style.position = 'absolute';
         this.element.style.width = option.width +'px';
         this.element.style.height = option.height +'px';
         this.reset();
@@ -106,6 +107,7 @@
         this.status = 0;
         //重置时间
         this.usedTime = 0; //移动时长
+        this.reachTime = 0; //到达边缘时间
     }
     //销毁元素
     Moves.prototype.destroy = function(){
@@ -178,10 +180,9 @@
         if(typeof element != 'object' || element.nodeType != 1)
             return null;
 
-        var moves,time,option={direction : this.direction,transformEnable:this.transformEnable};
+        var moves,time,option={direction: this.direction,transformEnable: this.transformEnable};
 
         //添加元素
-        element.style.position = 'absolute';
         if(element.parentNode !== this.container) {
             this.container.appendChild(element);
         }
@@ -230,7 +231,6 @@
             this.prevMoves.nextSibling = moves;
             this.prevMoves = moves;
         }
-        this.prevMoves = moves;
 
         moves = null;
         element = null;
@@ -259,10 +259,11 @@
                 if(this.startEvent)
                     this.startEvent(moves, time);
             } else if(moves.nextSibling && moves.nextSibling.status === 0) {
+                //启动下一个moves
                 switch(this.direction) {
                     case 1: {
                         if(this.transformEnable) {
-                            if(moves.usedTime >= moves.duration*moves.height/moves.distance){
+                            if(moves.usedTime > moves.duration*moves.height/moves.distance){
                                 isNextStart = true;
                             }
                         } else {
@@ -273,7 +274,7 @@
                         break;
                     case 3: {
                         if(this.transformEnable) {
-                            if(moves.usedTime >= moves.duration*moves.height/moves.distance){
+                            if(moves.usedTime > moves.duration*moves.height/moves.distance){
                                 isNextStart = true;
                             }
                         } else {
@@ -284,7 +285,7 @@
                         break;
                     case 2: {
                         if(this.transformEnable) {
-                            if(moves.usedTime >= moves.duration*moves.width/moves.distance){
+                            if(moves.usedTime > moves.duration*moves.width/moves.distance){
                                 isNextStart = true;
                             }
                         } else {
@@ -295,7 +296,7 @@
                         break;
                     default: {
                         if(this.transformEnable) {
-                            if(moves.usedTime >= moves.duration*moves.width/moves.distance){
+                            if(moves.usedTime > moves.duration*moves.width/moves.distance){
                                 isNextStart = true;
                             }
                         } else {
@@ -318,7 +319,7 @@
 
             for(i=0; i < length; i++){
                 moves = this.list[i];
-                if(moves.status === 2) {
+                if(moves.status === 9) {
                     //到达终点，清理元素
                     if(this.endEvent) {
                         this.endEvent(moves, time);
@@ -364,7 +365,7 @@
                                     moves.element.style.top = position+'px';
                                     moves.usedTime += interval;
                                     if(position<=-moves.height)
-                                        moves.status = 2;
+                                        moves.status = 9;
                                 }
                             }
                         }
@@ -396,7 +397,7 @@
                                     moves.element.style.top = position+'px';
                                     moves.usedTime += interval;
                                     if(position>=this.height)
-                                        moves.status = 2;
+                                        moves.status = 9;
                                 }
                             }
                         }
@@ -428,7 +429,7 @@
                                     moves.element.style.left = position+'px';
                                     moves.usedTime += interval;
                                     if(position>=this.width)
-                                        moves.status = 2;
+                                        moves.status = 9;
                                 }
                             }
                         }
@@ -460,7 +461,7 @@
                                     moves.element.style.left = position+'px';
                                     moves.usedTime += interval;
                                     if(position<=-moves.width)
-                                        moves.status = 2;
+                                        moves.status = 9;
                                 }
                             }
                         }
