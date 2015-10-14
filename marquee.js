@@ -32,7 +32,7 @@
     }
     if(transitionEnd) {
         transitionEndEvent = function(e) {
-            this.status = 3;
+            this.status = 2;
         }
     }
     //addEventListener
@@ -61,7 +61,7 @@
             return;
 
         this.isInit = false; //用于判断第一次绑定transitionEnd事件
-        this.status = 0; //0,未开始;1,开始;2,到达容器边缘;3,到达尽头
+        this.status = 0; //0,未开始;1,开始;2,到达尽头
         this.nextSibling = null; //下一个移动对象
         this.element = option.element; //当前dom元素
         this.width = option.width;
@@ -105,8 +105,7 @@
         }
         this.status = 0;
         //重置时间
-        this.usedTime = 0; //移动时间
-        this.reachTime = 0; //到达边缘时间
+        this.usedTime = 0; //移动时长
     }
     //销毁元素
     Moves.prototype.destroy = function(){
@@ -318,7 +317,7 @@
 
             for(i=0; i < length; i++){
                 moves = this.list[i];
-                if(moves.status === 3) {
+                if(moves.status === 2) {
                     //到达终点，清理元素
                     if(this.endEvent) {
                         this.endEvent(moves, time);
@@ -330,20 +329,22 @@
                         //清理元素
                         moves.destroy();
                     }
+                    //从list里移除
                     this.list[i] = null;
                 } else if(moves.reachTime && !this.transformEnable && this.reachEvent && this.reachEvent(moves, time)) {
-                    //到达边缘暂停
+                    //到达边缘暂停，仅限位移模式
                 } else {
                     //正常流程
                     switch(this.direction) {
                         case 1: {
                             if(this.transformEnable) {
-                                if(!moves.startTime) {
-                                    moves.startTime = time;
+                                if(moves.status === 0) {
+                                    moves.status = 1;
                                     moves.element.style.transition = 'transform '+moves.duration/1000+'s linear';
                                     moves.element.style.transform = 'translateY(-' + moves.distance + 'px)';
                                 }
                                 if(i < 2 && !moves.reachTime && moves.usedTime >= this.duration){
+                                    //到达边缘
                                     moves.reachTime = time;
                                 }
                                 moves.usedTime += interval;
@@ -361,19 +362,20 @@
                                     moves.element.style.top = position+'px';
                                     moves.usedTime += interval;
                                     if(position<=-moves.height)
-                                        moves.isEnd = true;
+                                        moves.status = 2;
                                 }
                             }
                         }
                             break;
                         case 3: {
                             if(this.transformEnable) {
-                                if(!moves.startTime) {
-                                    moves.startTime = time;
+                                if(moves.status === 0) {
+                                    moves.status = 1;
                                     moves.element.style.transition = 'transform '+moves.duration/1000+'s linear';
                                     moves.element.style.transform = 'translateY(' + moves.distance + 'px)';
                                 }
                                 if(i < 2 && !moves.reachTime && moves.usedTime >= this.duration){
+                                    //到达边缘
                                     moves.reachTime = time;
                                 }
                                 moves.usedTime += interval;
@@ -391,19 +393,20 @@
                                     moves.element.style.top = position+'px';
                                     moves.usedTime += interval;
                                     if(position>=this.height)
-                                        moves.status = 3;
+                                        moves.status = 2;
                                 }
                             }
                         }
                             break;
                         case 2: {
                             if(this.transformEnable) {
-                                if(!moves.startTime) {
-                                    moves.startTime = time;
+                                if(moves.status === 0) {
+                                    moves.status = 1;
                                     moves.element.style.transition = 'transform '+moves.duration/1000+'s linear';
                                     moves.element.style.transform = 'translateX(' + moves.distance + 'px)';
                                 }
                                 if(i < 2 && !moves.reachTime && moves.usedTime >= this.duration){
+                                    //到达边缘
                                     moves.reachTime = time;
                                 }
                                 moves.usedTime += interval;
@@ -421,7 +424,7 @@
                                     moves.element.style.left = position+'px';
                                     moves.usedTime += interval;
                                     if(position>=this.width)
-                                        moves.isEnd = true;
+                                        moves.status = 2;
                                 }
                             }
                         }
@@ -434,7 +437,7 @@
                                     moves.element.style.transform = 'translateX(-' + moves.distance + 'px)';
                                 }
                                 if(i < 2 && !moves.reachTime && moves.usedTime >= this.duration){
-                                    moves.status = 2;
+                                    //到达边缘
                                     moves.reachTime = time;
                                 }
                                 moves.usedTime += interval;
@@ -452,7 +455,7 @@
                                     moves.element.style.left = position+'px';
                                     moves.usedTime += interval;
                                     if(position<=-moves.width)
-                                        moves.status = 3;
+                                        moves.status = 2;
                                 }
                             }
                         }
@@ -464,6 +467,7 @@
                 this.list.shift();
             }
             if(this.list.length){
+                //继续下个动画
                 animationFrame(function(){_this.animate();});
             } else if(this.loop === 0 || this.loopCounter++<this.loop) {
                 //重新启动

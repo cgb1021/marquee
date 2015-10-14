@@ -1,0 +1,80 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>marquee demo</title>
+<meta content="marquee demo" name="Keywords">
+<meta content="marquee demo" name="Description">
+<style>
+.marquee {
+	width: 600px;
+	height: 200px;
+	position: relative;
+	overflow: hidden;
+	border: 1px solid #ccc;
+	margin: 20px 0;
+}
+.marquee div {
+	position: absolute;
+	top: 0;
+	background: RGBA(0,0,0,.4);
+}
+pre {background:#f1f1f1;}
+#just_do_it {
+	padding:5px 20px;
+	border:1px solid black;
+	border-radius:5px;
+}
+</style>
+</head>
+
+<body>
+<a href="javascript:void(0);" id="print" style="padding:10px 20px; border:1px solid #ccc;">print</a>
+
+  <div class="marquee" id="marquee1"><div>这是一个marquee插件，支持传统的left,top方式移动，也支持CSS3标准的transform方式移动。</div></div>
+
+<script>
+var printPage = function() {
+	try {
+		if (window.print) {
+		  var html = ''; 
+		  html = '<html><head>';
+		  html += "<style>body{font-size:9px;}td{font-size:9px;}</style>";
+		  html += '<style type="text/css" media=print>.noprint{display : none;border: 1px solid red;}</style>'; 
+		  html += '<OBJECT classid=\'CLSID:8856F961-340A-11D0-A96B-00C04FD705A2\' height=0 id=wb name=wb width=0></OBJECT>';
+		  html += '</head><body>'; 
+		  
+		  if(window.attachEvent){ 
+		  	html += "<div class='noprint' align='center' ><input id=printView name=Button onClick='wb.execwb(7,1)' type=button value=打印预览> <input id = pageSetup name=Button onClick='wb.execwb(8,1)' type=button value=页面设置> <input id = print name=Button onClick='window.print()' type=button  value=直接打印><hr style='hrStyle'></div>"
+		  }else{
+		  	html += "<div class='noprint' align='center' ><input id = print name=Button onClick='window.print()' type=button  value=直接打印><hr style='hrStyle'></div>"
+		  }
+		  var printHtml = $('#marquee1').html();    
+      var idx = printHtml.indexOf( "<!--startprint-->" );   
+      if( idx > -1 ){
+     	  html += printHtml.substr( idx + 17 , printHtml.indexOf( "<!--endprint-->" , idx + 17 + 1 ) );
+      }else{
+      	html += printHtml;
+      }
+     
+	  	html += '<\/body><\/html>';
+	  
+	  	var win = window.open('','',"left=0,top=0,width=" + screen.availWidth + ",height=" + screen.availHeight + ",toolbar=no,menubar=no,scrollbars=no,resizable=no,location=no,status=no"); 
+	  
+	  	win.document.open("text/html");
+	  	win.document.write(html);
+			win.document.close(); 
+		}
+	} catch(e) {
+		alert(e);
+	}
+}
+if(window.addEventListener)
+	document.getElementById('print').addEventListener('click', printPage);
+else if(window.attachEvent)
+		document.getElementById('print').attachEvent('onclick', printPage);
+else
+	document.getElementById('print').onclick = printPage;
+</script>
+</body>
+</html>
