@@ -6,6 +6,10 @@
 <meta content="marquee demo" name="Keywords">
 <meta content="marquee demo" name="Description">
 <style>
+body {
+	font-size:14px;
+	line-height:1.5;
+}
 .marquee {
 	width: 600px;
 	height: 200px;
@@ -19,11 +23,13 @@
 	top: 0;
 	background: RGBA(0,0,0,.4);
 }
-pre {background:#f1f1f1;}
-#just_do_it {
-	padding:5px 20px;
-	border:1px solid black;
-	border-radius:5px;
+pre {
+	background: #f1f1f1;
+}
+.btn {
+	padding: 5px 20px;
+	border: 1px solid black;
+	border-radius: 5px;
 }
 </style>
 </head>
@@ -34,33 +40,41 @@ pre {background:#f1f1f1;}
 <p>任何使用的问题，请联系48838096@qq.com。欢迎访问的我的个人博客：<a href="http://xhyo.com/" target="_blank">http://xhyo.com/</a>。</p>
 <div class="demo">
   <h2>最简单的调用方法</h2>
-  <div class="marquee" id="marquee1"><div>这是一个marquee插件，支持传统的left,top方式移动，也支持CSS3标准的transform方式移动。</div></div>
-  <pre><code>var marqueeObj = marquee('marquee1',{duration:5000}); //marquee(document.getElementById('marquee1'),{duration:5000});
-//marqueeObj.push($('&lt;div&gt;'+getText()+'&lt;/div&gt;')[0]);
-</code></pre>
-<p>初始化：marquee(element,option)</p><p><code>element</code>可以是一个dom对象，也可以是一个id字符串,传入字符串的时候会缓存对象</p>
-<p><code>option</code>接收的内容可以有：</p>
-<pre><code>{
-transformEnable:&lt;boolean&gt;, //是否使用html5 transform
-loop:&lt;int&gt;, //循环次数,0:无限循环;>0:按次数循环
-direction:&lt;0-3&gt;, //0:从右往左；1:从下往上；2:从左往右；3:从上往下
-duration:&lt;int&gt;, //移动时间
-startEvent:&lt;function&gt;, //开始移动时执行的函数
-reachEvent:&lt;function&gt;, //到达边缘时执行的函数，transform方式慎用
-endEvent:&lt;function&gt;, //停止移动时执行的函数
-hoverEvent:&lt;function&gt; //鼠标经过时执行的函数，暂时不支持
+  <div class="marquee" id="marquee1">
+    <div>这是一个marquee插件，支持传统的left,top方式移动，也支持CSS3标准的transform方式移动。</div>
+  </div>
+  <pre><code>marquee(document.getElementById('marquee1'),{duration:3000});</code></pre>
+  <p>初始化：marquee(element,option)</p>
+  <p><code>element</code>可以是一个dom对象，也可以是一个id字符串,传入字符串的时候会缓存对象</p>
+  <p><code>option</code>接收的内容可以有：</p>
+  <pre><code>{
+transformEnable: false, //transform模式还是位移(left/top)模式
+loop:1, //循环次数,0:无限循环;>0:按次数循环
+duration:5000, //移动持续时间
+direction: 0, //0:从右往左；1:从下往上；2:从左往右；3:从上往下
+startEvent: function(){}, //移动开始事件
+endEvent: function(){}, //移动结束事件
+reachEvent: function(){}, //移动元素到达边缘事件，return true的时候到达边缘后暂停。只支持位移模式
+hoverEvent: function(){} //移动元素鼠标悬停事件
 }</code></pre>
 </div>
 <div class="demo">
-<h2>综合demo</h2>
-<div class="marquee" id="marquee2"></div>
-选择方向：<select id="direction" name="direction"><option value="0" selected>从右往左</option><option value="1">从下往上</option><option value="2">从左往右</option><option value="3">从上往下</option></select>
- 设置时间：<input type="text" name="duration" id="duration" value="2000"> 使用transform：<input type="checkbox" name="use_html5" id="use_html5"> 循环次数：<input type="text" name="loop" id="loop" value="2">
-<a href="#" id="just_do_it">试一下</a>
-</div>
+  <h2>综合应用demo</h2>
+  <div class="marquee" id="marquee2"></div>
+  <label>选择方向：<select id="direction" name="direction">
+    <option value="0" selected>从右往左</option>
+    <option value="1">从下往上</option>
+    <option value="2">从左往右</option>
+    <option value="3">从上往下</option>
+  </select></label> | 
+  <label>移动个数：<input type="text" name="number" id="number" value="2"></label> | 
+  <label>设置时间：<input type="text" name="duration" id="duration" value="2000"></label> | 
+  <label>使用transform：<input type="checkbox" name="use_html5" id="use_html5"></label> | 
+  <label>循环次数：<input type="text" name="loop" id="loop" value="2"></label> | 
+  <a href="#" id="just_do_it" class="btn">试一下</a> </div>
 <script>
 window.console = window.console || {'log':function(){}};
-</script>
+</script> 
 <script type="text/javascript" src="jquery.min.js"></script> 
 <script src="../marquee.js"></script> 
 <script>
@@ -69,29 +83,24 @@ function getText() {
 	var r = Math.floor(Math.random()*textArr.length);
 	return textArr[r];
 }
-var c = 0;
-var text = getText();
 
 //最简单的调用方法
-marquee('marquee1',{duration:5000,transformEnable:true}); //marquee(document.getElementById('marquee1'),{duration:5000}).push($('<div>'+getText()+'</div>')[0]);
+marquee(document.getElementById('marquee1'),{duration:3000});
 
-var marqueeObj2 = 
+//综合应用demo
 $('#just_do_it').on('click', function(){
 	var direction = $('#direction option:selected').val();
 	var duration = $('#duration').val();
 	var useHtml5 = $('#use_html5:checked').val();
-	var loop = $('#loop').val();
+	var loop = parseInt($('#loop').val(), 10);
+	var number = parseInt($('#number').val(), 10);
 	var count = 0;
 	
-	var marqueeObj = marquee($('#marquee2')[0],{duration:duration,direction:direction,loop:loop,transformEnable:!!useHtml5
-	//startEvent: function(scroller,time){console.log('startEvent',scroller,time);},
-	//endEvent: function(scroller,time){console.log('endEvent',scroller,time);},
-	//reachEvent:function(scroller,time){console.log('reachEvent',scroller,time);
-		//if(time-scroller.endTime < 2000) return true;
-		//else return false; //到达边缘悬停2s
-	//}
-	}); //marquee(document.getElementById('marquee1'),{duration:5000});
-	var intervalId = window.setInterval(function(){count++; if(count>10) window.clearInterval(intervalId); marqueeObj.push($('<div>'+getText()+'</div>')[0]);}, 1000);
+	if(number < 1 || number > 100)
+		number = 5;
+	var marqueeObj = marquee('marquee2'); //marquee(document.getElementById('marquee1'),{duration:5000});
+	marqueeObj.init({duration:duration,direction:direction,loop:loop,transformEnable:!!useHtml5});
+	var intervalId = window.setInterval(function(){count++; if(count>=number) window.clearInterval(intervalId); marqueeObj.push($('<div>'+getText()+'</div>')[0]);}, 1000);
 	return false;	
 })
 </script>

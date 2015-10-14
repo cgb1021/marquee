@@ -32,7 +32,7 @@
     }
     if(transitionEnd) {
         transitionEndEvent = function(e) {
-            this.isEnd = true;
+            this.status = 3;
         }
     }
     //addEventListener
@@ -61,7 +61,7 @@
             return;
 
         this.isInit = false; //用于判断第一次绑定transitionEnd事件
-        this.isEnd = false; //transform模式下是否到达尽头
+        this.status = 0; //0,未开始;1,开始;2,到达容器边缘;3,到达尽头
         this.nextSibling = null; //下一个移动对象
         this.element = option.element; //当前dom元素
         this.width = option.width;
@@ -103,11 +103,10 @@
             this.x = this.left; //水平坐标
             this.y = this.top; //垂直坐标
         }
-        this.isEnd = false;
+        this.status = 0;
         //重置时间
-        this.startTime = 0; //开始时间
-        this.reachTime = 0; //到达边缘时间
         this.usedTime = 0; //移动时间
+        this.reachTime = 0; //到达边缘时间
     }
     //销毁元素
     Moves.prototype.destroy = function(){
@@ -118,9 +117,21 @@
         this.element = null;
         this.nextSibling = null;
     }
-    //移动容器对象
+    /*
+     * 移动容器对象
+     *
+     * @param object/string element 容器元素或者容器元素id
+     * @param object option 参数 {transformEnable: false, //transform模式还是位移(left/top)模式
+     *                            loop:1, //循环次数,0:无限循环;>0:按次数循环
+     *                            duration:5000, //移动持续时间
+     *                            direction: 0, //0:从右往左；1:从下往上；2:从左往右；3:从上往下
+     *                            startEvent: function(){}, //移动开始事件
+     *                            endEvent: function(){}, //移动结束事件
+     *                            reachEvent: function(){}, //移动元素到达边缘事件，return true的时候到达边缘后暂停。只支持位移(left/top)模式
+     *                            hoverEvent: function(){} //移动元素鼠标悬停事件。只支持位移(left/top)模式
+     *                            }
+     */
     function Marquee(element, option) {
-        var nodes, i,length;
         this.list = []; //移动对象列表
         this.container = element; //移动容器
         this.width = element.clientWidth; //容器宽度
@@ -129,17 +140,35 @@
         this.fistMoves = null; //第一个移动对象
         this.lastTime = 0; //队列上一次执行时间
         this.loopCounter = 0; //执行次数
-        //参数配置
-        this.transformEnable = !!(supportHtml5 && option.transformEnable); //使用html5
-        this.loop = typeof option.loop != 'undefined' ? Math.abs(parseInt(option.loop,10)) : 1; //循环次数,0:无限循环;>0:按次数循环
-        this.duration = typeof option.duration != 'undefined' ? Math.abs(parseInt(option.duration,10)) : element.clientWidth*10; //移动持续时间
-        this.direction = parseInt(option.direction,10) || 0; //0:从右往左；1:从下往上；2:从左往右；3:从上往下
-        this.startEvent = option.startEvent || null; //移动元素开始事件
-        this.endEvent = option.endEvent || null; //移动结束事件
-        this.reachEvent = option.reachEvent || null; //移动元素到达边缘事件,return true的时候到达边缘后暂停
-        this.hoverEvent = option.hoverEvent || null; //移动元素鼠标悬停事件
 
         this.container.style.overflow = 'hidden';
+        //初始化
+        this.init(option);
+    }
+    //设置option
+    Marquee.prototype.init = function(option) {
+        var nodes, i,length;
+
+        if(option) {
+            this.transformEnable = !!(option.transformEnable && supportHtml5); //transform模式还是位移(left/top)模式
+            this.loop = typeof option.loop != 'undefined' ? Math.abs(parseInt(option.loop,10)) : 1; //循环次数,0:无限循环;>0:按次数循环
+            this.duration = typeof option.duration != 'undefined' ? Math.abs(parseInt(option.duration,10)) : element.clientWidth*10; //移动持续时间
+            this.direction = parseInt(option.direction,10) || 0; //0:从右往左；1:从下往上；2:从左往右；3:从上往下
+            this.startEvent = option.startEvent || null; //移动开始事件
+            this.endEvent = option.endEvent || null; //移动结束事件
+            this.reachEvent = option.reachEvent || null; //移动元素到达边缘事件，return true的时候到达边缘后暂停。只支持位移(left/top)模式
+            this.hoverEvent = option.hoverEvent || null; //移动元素鼠标悬停事件。只支持位移(left/top)模式
+        } else {
+            this.transformEnable = false;
+            this.loop = 1;
+            this.duration = this.container.clientWidth*10;
+            this.direction = 0;
+            this.startEvent = null;
+            this.endEvent = null;
+            this.reachEvent = null;
+            this.hoverEvent = null;
+        }
+
         nodes = this.container.childNodes;
         for(i = 0,length = nodes.length; length && i<length; i++)
             this.push(nodes[i]);
@@ -196,12 +225,6 @@
             this.loopCounter = 1;
             //启动第一个移动对象
             this.list.push(moves);
-            if(!this.transformEnable)
-                moves.startTime = time;
-            else
-                moves.usedTime += 17;
-            if(this.startEvent)
-                this.startEvent(moves, time);
             this.animate();
         } else {
             this.prevMoves.nextSibling = moves;
@@ -228,7 +251,14 @@
             //启动下一个对象
             moves = this.list[length-1];
 
-            if(moves.nextSibling && !moves.nextSibling.startTime) {
+            if(moves.status === 0) {
+                //第一个moves
+                if(!this.transformEnable)
+                    moves.status = 1;
+                //执行开始事件
+                if(this.startEvent)
+                    this.startEvent(moves, time);
+            } else if(moves.nextSibling && !moves.nextSibling.isStart) {
                 switch(this.direction) {
                     case 1: {
                         if(this.transformEnable) {
@@ -278,7 +308,7 @@
                     moves = moves.nextSibling;
                     this.list.push(moves);
                     if(!this.transformEnable)
-                        moves.startTime = time;
+                        moves.status = 1;
                     //执行开始事件
                     if(this.startEvent)
                         this.startEvent(moves, time);
@@ -288,7 +318,7 @@
 
             for(i=0; i < length; i++){
                 moves = this.list[i];
-                if(moves.isEnd) {
+                if(moves.status === 3) {
                     //到达终点，清理元素
                     if(this.endEvent) {
                         this.endEvent(moves, time);
@@ -361,7 +391,7 @@
                                     moves.element.style.top = position+'px';
                                     moves.usedTime += interval;
                                     if(position>=this.height)
-                                        moves.isEnd = true;
+                                        moves.status = 3;
                                 }
                             }
                         }
@@ -398,12 +428,13 @@
                             break;
                         default: {
                             if(this.transformEnable) {
-                                if(!moves.startTime) {
-                                    moves.startTime = time;
+                                if(moves.status === 0) {
+                                    moves.status = 1;
                                     moves.element.style.transition = 'transform '+moves.duration/1000+'s linear';
                                     moves.element.style.transform = 'translateX(-' + moves.distance + 'px)';
                                 }
                                 if(i < 2 && !moves.reachTime && moves.usedTime >= this.duration){
+                                    moves.status = 2;
                                     moves.reachTime = time;
                                 }
                                 moves.usedTime += interval;
@@ -421,7 +452,7 @@
                                     moves.element.style.left = position+'px';
                                     moves.usedTime += interval;
                                     if(position<=-moves.width)
-                                        moves.isEnd = true;
+                                        moves.status = 3;
                                 }
                             }
                         }
@@ -438,10 +469,6 @@
                 //重新启动
                 moves = this.fistMoves;
                 this.list.push(moves);
-                if(!this.transformEnable)
-                    moves.startTime = time;
-                if(this.startEvent)
-                    this.startEvent(moves, time);
                 animationFrame(function(){_this.animate();});
             } else {
                 //todo: 空队列，动画结束，执行回调函数
