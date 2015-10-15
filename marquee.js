@@ -230,7 +230,6 @@
                 option.left = this.width;
                 option.distance = this.width+option.width;
                 option.duration = this.duration/this.width*option.distance;
-
             }
         }
         //生成一个移动对象
@@ -312,16 +311,29 @@
                     switch(this.direction) {
                         case 1: {
                             if(this.transformEnable) {
-                                if(moves.status === 0) {
-                                    moves.status = 1;
-                                    moves.element.style.transition = 'transform '+moves.duration/1000+'s linear';
-                                    moves.element.style.transform = 'translateY(-' + moves.distance + 'px)';
-                                } else if(i < 2 && !moves.reachTime && moves.usedTime >= this.duration){
-                                    //到达边缘
-                                    moves.status = 3;
-                                    moves.reachTime = time;
-                                    if(this.reachEvent)
-                                        this.reachEvent(moves, time)
+                                switch(moves.status){
+                                    case 0: {
+                                        //开始移动(status变化点)
+                                        moves.status = 1;
+                                        moves.element.style.transition = 'transform '+Math.abs(this.duration-moves.duration)/1000+'s linear';
+                                        moves.element.style.transform = 'translateY(-' + moves.height + 'px)';
+                                    }
+                                        break;
+                                    case 2: {
+                                        //整体越过起跑线(可以启动下一个对象)(status变化点)
+                                        moves.element.style.transition = 'transform '+Math.abs(this.duration*2-moves.duration)/1000+'s linear';
+                                        moves.element.style.transform = 'translateY(-' + this.height + 'px)';
+                                        moves.status++;
+                                    }
+                                        break;
+                                    case 4: {
+                                        //到达对岸
+                                        moves.element.style.transition = 'transform '+Math.abs(this.duration-moves.duration)/1000+'s linear';
+                                        moves.element.style.transform = 'translateY(-' + moves.distance + 'px)';
+                                        if(this.reachEvent)
+                                            this.reachEvent(moves, time);
+                                        moves.status++;
+                                    }
                                 }
                                 moves.usedTime += interval;
                             } else {
@@ -329,9 +341,12 @@
                                 if(i > 0  && this.list[i-1] && (this.list[i-1].y+this.list[i-1].height)>position) {
                                     //和前一个元素重叠，暂停
                                 } else {
+                                    if(moves.status === 4) {
+                                        moves.status++;
+                                    }
                                     if(i < 2 && !moves.reachTime && position<=0) {
                                         //到达边缘
-                                        moves.status = 3;
+                                        moves.status = 4;
                                         moves.reachTime = time;
                                         position = 0;
                                     }
@@ -348,16 +363,29 @@
                             break;
                         case 3: {
                             if(this.transformEnable) {
-                                if(moves.status === 0) {
-                                    moves.status = 1;
-                                    moves.element.style.transition = 'transform '+moves.duration/1000+'s linear';
-                                    moves.element.style.transform = 'translateY(' + moves.distance + 'px)';
-                                } else if(i < 2 && !moves.reachTime && moves.usedTime >= this.duration){
-                                    //到达边缘
-                                    moves.status = 3;
-                                    moves.reachTime = time;
-                                    if(this.reachEvent)
-                                        this.reachEvent(moves, time)
+                                switch(moves.status){
+                                    case 0: {
+                                        //开始移动(status变化点)
+                                        moves.status = 1;
+                                        moves.element.style.transition = 'transform '+Math.abs(this.duration-moves.duration)/1000+'s linear';
+                                        moves.element.style.transform = 'translateY(' + moves.height + 'px)';
+                                    }
+                                        break;
+                                    case 2: {
+                                        //整体越过起跑线(可以启动下一个对象)(status变化点)
+                                        moves.element.style.transition = 'transform '+Math.abs(this.duration*2-moves.duration)/1000+'s linear';
+                                        moves.element.style.transform = 'translateY(' + this.height + 'px)';
+                                        moves.status++;
+                                    }
+                                        break;
+                                    case 4: {
+                                        //到达对岸
+                                        moves.element.style.transition = 'transform '+Math.abs(this.duration-moves.duration)/1000+'s linear';
+                                        moves.element.style.transform = 'translateY(' + moves.distance + 'px)';
+                                        if(this.reachEvent)
+                                            this.reachEvent(moves, time);
+                                        moves.status++;
+                                    }
                                 }
                                 moves.usedTime += interval;
                             } else {
@@ -365,9 +393,12 @@
                                 if(i > 0  && this.list[i-1] && (position+moves.height)>this.list[i-1].y) {
                                     //和前一个元素重叠，暂停
                                 } else {
+                                    if(moves.status === 4) {
+                                        moves.status++;
+                                    }
                                     if(i < 2 && !moves.reachTime && position>=(this.height-moves.height)) {
                                         //到达边缘
-                                        moves.status = 3;
+                                        moves.status = 4;
                                         moves.reachTime = time;
                                         position = this.height-moves.height;
                                     }
@@ -384,16 +415,29 @@
                             break;
                         case 2: {
                             if(this.transformEnable) {
-                                if(moves.status === 0) {
-                                    moves.status = 1;
-                                    moves.element.style.transition = 'transform '+moves.duration/1000+'s linear';
-                                    moves.element.style.transform = 'translateX(' + moves.distance + 'px)';
-                                } else if(i < 2 && !moves.reachTime && moves.usedTime >= this.duration){
-                                    //到达边缘
-                                    moves.status = 3;
-                                    moves.reachTime = time;
-                                    if(this.reachEvent)
-                                        this.reachEvent(moves, time)
+                                switch(moves.status){
+                                    case 0: {
+                                        //开始移动(status变化点)
+                                        moves.status = 1;
+                                        moves.element.style.transition = 'transform '+Math.abs(this.duration-moves.duration)/1000+'s linear';
+                                        moves.element.style.transform = 'translateX(' + moves.width + 'px)';
+                                    }
+                                        break;
+                                    case 2: {
+                                        //整体越过起跑线(可以启动下一个对象)(status变化点)
+                                        moves.element.style.transition = 'transform '+Math.abs(this.duration*2-moves.duration)/1000+'s linear';
+                                        moves.element.style.transform = 'translateX(' + this.width + 'px)';
+                                        moves.status++;
+                                    }
+                                        break;
+                                    case 4: {
+                                        //到达对岸
+                                        moves.element.style.transition = 'transform '+Math.abs(this.duration-moves.duration)/1000+'s linear';
+                                        moves.element.style.transform = 'translateX(' + moves.distance + 'px)';
+                                        if(this.reachEvent)
+                                            this.reachEvent(moves, time);
+                                        moves.status++;
+                                    }
                                 }
                                 moves.usedTime += interval;
                             } else {
@@ -401,6 +445,9 @@
                                 if(i > 0  && this.list[i-1] && (position+moves.width)>this.list[i-1].x) {
                                     //和前一个元素重叠，暂停
                                 } else {
+                                    if(moves.status === 4) {
+                                        moves.status++;
+                                    }
                                     if(i < 2 && !moves.reachTime && position>=(this.width-moves.width)) {
                                         //到达边缘
                                         moves.status = 4;
