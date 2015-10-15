@@ -7,9 +7,10 @@
 <meta content="marquee demo" name="Description">
 <style>
 body {
-	font-size:14px;
-	line-height:1.5;
+	font-size: 14px;
+	line-height: 1.5;
 }
+.red {color:red;}
 .marquee {
 	width: 600px;
 	height: 200px;
@@ -39,10 +40,11 @@ pre {
 <p>这是一个marquee插件，支持传统的left,top方式移动，也支持CSS3标准的transform方式移动。</p>
 <p>任何使用的问题，请联系48838096@qq.com。欢迎访问的我的个人博客：<a href="http://xhyo.com/" target="_blank">http://xhyo.com/</a>。</p>
 <div class="demo">
-  <h2>最简单的调用方法</h2>
+  <h2>最简单的调用方法(位移模式)</h2>
   <div class="marquee" id="marquee1">
     <div>这是一个marquee插件，支持传统的left,top方式移动，也支持CSS3标准的transform方式移动。</div>
   </div>
+  <a href="#" title="再试一次" data-order="0" class="btn try-it-again">再试一次</a>
   <pre><code>marquee(document.getElementById('marquee1'),{duration:3000});</code></pre>
   <p>初始化：marquee(element,option)</p>
   <p><code>element</code>可以是一个dom对象，也可以是一个id字符串,传入字符串的时候会缓存对象</p>
@@ -59,19 +61,44 @@ hoverEvent: function(){} //移动元素鼠标悬停事件
 }</code></pre>
 </div>
 <div class="demo">
+  <h2>最简单的调用方法(transform模式)</h2>
+  <div class="marquee" id="marquee2">
+    <div>这是一个marquee插件，支持传统的left,top方式移动，也支持CSS3标准的transform方式移动。</div>
+  </div>
+  <a href="#" title="再试一次" data-order="1" class="btn try-it-again">再试一次</a>
+  <pre><code>marquee(document.getElementById('marquee2'),{duration:3000,transformEnable:true});</code></pre>
+</div>
+<div class="demo">
+  <h2>位移模式下到达边缘暂停</h2>
+  <div class="marquee" id="marquee3">
+    <div>这是一个marquee插件，支持传统的left,top方式移动，也支持CSS3标准的transform方式移动。</div>
+  </div>
+  <a href="#" title="再试一次" data-order="2" class="btn try-it-again">再试一次</a>
+  <pre><code>marquee('marquee3',{duration:3000,reachEvent:function(m, t){m.element.className='red'; if((t-m.reachTime)< 3000) return true; else {return false;}}});</code></pre>
+</div>
+<div class="demo">
   <h2>综合应用demo</h2>
-  <div class="marquee" id="marquee2"></div>
+  <div class="marquee" id="marquee"></div>
   <label>选择方向：<select id="direction" name="direction">
-    <option value="0" selected>从右往左</option>
-    <option value="1">从下往上</option>
-    <option value="2">从左往右</option>
-    <option value="3">从上往下</option>
-  </select></label> | 
-  <label>移动个数：<input type="text" name="number" id="number" value="2"></label> | 
-  <label>设置时间：<input type="text" name="duration" id="duration" value="2000"></label> | 
-  <label>使用transform：<input type="checkbox" name="use_html5" id="use_html5"></label> | 
-  <label>循环次数：<input type="text" name="loop" id="loop" value="2"></label> | 
-  <a href="#" id="just_do_it" class="btn">试一下</a> </div>
+      <option value="0" selected>从右往左</option>
+      <option value="1">从下往上</option>
+      <option value="2">从左往右</option>
+      <option value="3">从上往下</option>
+    </select>
+  </label>
+  |
+  <label>移动个数：<input type="text" name="number" id="number" value="2">
+  </label>
+  |
+  <label>设置时间：<input type="text" name="duration" id="duration" value="2000">
+  </label>
+  |
+  <label>使用transform：<input type="checkbox" name="use_html5" id="use_html5">
+  </label>
+  |
+  <label>循环次数：<input type="text" name="loop" id="loop" value="2">
+  </label>
+  | <a href="#" id="just_do_it" class="btn">试一下</a> </div>
 <script>
 window.console = window.console || {'log':function(){}};
 </script> 
@@ -84,9 +111,26 @@ function getText() {
 	return textArr[r];
 }
 
-//最简单的调用方法
-marquee(document.getElementById('marquee1'),{duration:3000});
-
+//最简单的调用方法(位移模式)
+marquee('marquee1',{duration:3000});
+//最简单的调用方法(transform模式)
+marquee('marquee2',{duration:3000,transformEnable:true});
+//位移模式下到达边缘暂停
+marquee('marquee3',{duration:3000,reachEvent:function(m, t){m.element.className='red'; if((t-m.reachTime)< 3000) return true; else {return false;}}});
+//try it again
+$('a.try-it-again').on('click', function(){
+	switch($(this).data('order')) {
+		case 1 : 
+		marquee('marquee2').push($('<div>'+getText()+'</div>')[0]);
+		break;
+		case 2 : 
+		marquee('marquee3').push($('<div>'+getText()+'</div>')[0]);
+		break;
+		default:
+		marquee('marquee1').push($('<div>'+getText()+'</div>')[0]);
+	}
+	return false;
+})
 //综合应用demo
 $('#just_do_it').on('click', function(){
 	var direction = $('#direction option:selected').val();
@@ -98,7 +142,7 @@ $('#just_do_it').on('click', function(){
 	
 	if(number < 1 || number > 100)
 		number = 5;
-	var marqueeObj = marquee('marquee2'); //marquee(document.getElementById('marquee1'),{duration:5000});
+	var marqueeObj = marquee('marquee'); //marquee(document.getElementById('marquee1'),{duration:5000});
 	marqueeObj.init({duration:duration,direction:direction,loop:loop,transformEnable:!!useHtml5});
 	var intervalId = window.setInterval(function(){count++; if(count>=number) window.clearInterval(intervalId); marqueeObj.push($('<div>'+getText()+'</div>')[0]);}, 1000);
 	return false;	
