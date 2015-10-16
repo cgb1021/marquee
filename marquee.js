@@ -153,8 +153,8 @@
      *                            direction: 0, //0:从右往左；1:从下往上；2:从左往右；3:从上往下
      *                            startEvent: function(moves,time){}, //移动开始事件
      *                            endEvent: function(moves,time){}, //移动结束事件
-     *                            reachEvent: function(moves,time){}, //移动元素到达边缘事件，return true的时候到达边缘后暂停。只支持位移模式(transform模式根本停不下来)。
-     *                            hoverEvent: function(moves,time){} //移动元素鼠标悬停事件。只支持位移模式(transform模式根本停不下来)。
+     *                            reachEvent: function(moves,time){}, //移动对象到达对岸事件。return true的时候暂停。只支持位移模式(transform模式根本停不下来)。
+     *                            hoverEvent: function(moves,time){} //移动对象鼠标悬停事件。return true的时候暂停。只支持位移模式(transform模式根本停不下来)。
      *                            }
      */
     function Marquee(element, option) {

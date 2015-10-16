@@ -54,8 +54,8 @@ duration:5000, //移动持续时间
 direction: 0, //0:从右往左；1:从下往上；2:从左往右；3:从上往下
 startEvent: function(moves,time){}, //移动开始事件
 endEvent: function(moves,time){}, //移动结束事件
-reachEvent: function(moves,time){}, //移动元素到达边缘事件，return true的时候到达边缘后暂停。只支持位移模式
-hoverEvent: function(moves,time){} //移动元素鼠标悬停事件
+reachEvent: function(moves,time){}, //移动对象到达对岸事件。return true的时候暂停。只支持位移模式(transform模式根本停不下来)。
+hoverEvent: function(moves,time){} //移动对象鼠标悬停事件。return true的时候暂停。只支持位移模式(transform模式根本停不下来)。
 }</code></pre></p>
   <p>4个事件中，出入参数是:(moves,time)。其中moves为Moves对象,time为时间(单位毫秒)。</p>
   <p>moves包含的属性和方法有：
@@ -111,7 +111,9 @@ hoverEvent: function(moves,time){} //移动元素鼠标悬停事件
     <div>这是一个marquee插件，支持传统的left,top方式移动，也支持CSS3标准的transform方式移动。</div>
   </div>
   <a href="#" title="再试一次" data-order="5" class="btn try-it-again">再试一次</a>
-  <pre><code>...</code></pre>
+  <pre><code>marquee('marquee6',{duration:3000,
+  hoverEvent:function(m, t){console.log('有鼠标经过'); return true;}
+});</code></pre>
 </div>
 <div class="demo">
   <h2>位移模式下的事件</h2>
@@ -189,7 +191,7 @@ marquee('marquee3',{duration:3000,reachEvent:function(m, t){m.element.className=
 //位移模式下鼠标经过事件
 marquee('marquee6',{duration:3000,hoverEvent:function(m, t){console.log('有鼠标经过'); return true;}});
 //位移模式下的事件
-marquee('marquee4',{duration:3000,startEvent:function(m, t){console.log('我开始滚了'); $(m.element).addClass('red');},endEvent:function(m, t){console.log('我滚完了')},reachEvent:function(m, t){console.log('到达边缘');$(m.element).removeClass('red');},hoverEvent:function(m, t){console.log('有鼠标经过')}});
+marquee('marquee4',{duration:3000,startEvent:function(m, t){console.log('位移模式下的事件::我开始滚了'); $(m.element).addClass('red');},endEvent:function(m, t){console.log('位移模式下的事件::我滚完了',m.duration,m.usedTime)},reachEvent:function(m, t){console.log('位移模式下的事件::到达边缘');$(m.element).removeClass('red');},hoverEvent:function(m, t){console.log('位移模式下的事件::有鼠标经过')}});
 //transform模式下的事件
 marquee('marquee5',{duration:3000,startEvent:function(m, t){console.log('transform模式下的事件::我开始滚了')},endEvent:function(m, t){console.log('transform模式下的事件::我滚完了',m.duration,m.usedTime)}});
 //try it again
