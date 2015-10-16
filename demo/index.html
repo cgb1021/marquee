@@ -25,6 +25,7 @@ body {
 	position: absolute;
 	top: 0;
 	background: RGBA(0,0,0,.4);
+	white-space:nowrap;
 }
 pre {
 	background: #f1f1f1;
@@ -107,14 +108,12 @@ reachEvent: function(moves,time){}, //移动对象到达对岸事件。return tr
 });</code></pre>
 </div>
 <div class="demo">
-  <h2>位移模式下鼠标经过事件</h2>
+  <h2>位移模式下鼠标经过暂停</h2>
   <div class="marquee" id="marquee6">
     <div>这是一个marquee插件，支持传统的left,top方式移动，也支持CSS3标准的transform方式移动。</div>
   </div>
   <a href="#" title="再试一次" data-order="5" class="btn try-it-again">再试一次</a>
-  <pre><code>marquee('marquee6',{duration:3000,
-  hoverEvent:function(m, t){console.log('有鼠标经过'); return true;}
-});</code></pre>
+  <pre><code>marquee('marquee6',{duration:3000,hover:true});</code></pre>
 </div>
 <div class="demo">
   <h2>位移模式下的事件</h2>

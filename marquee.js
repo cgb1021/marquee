@@ -95,9 +95,11 @@
         //绑定transitionend事件
         if(this.transformEnable) {
             addEvent(this.element, transitionEnd, bind(this, transitionEndEvent));
+        } else {
+            addEvent(this.element, 'mouseover', bind(this, hoverOnEvent));
+            addEvent(this.element, 'mouseout', bind(this, hoverOutEvent));
         }
-        addEvent(this.element, 'mouseover', bind(this, hoverOnEvent));
-        addEvent(this.element, 'mouseout', bind(this, hoverOutEvent));
+
         this.reset();
     }
     //重置元素
@@ -132,9 +134,11 @@
         try {
             if(this.transformEnable) {
                 removeEvent(this.element, transitionEnd, bind(this, transitionEndEvent));
+            } else {
+                removeEvent(this.element, 'mouseover', bind(this, hoverOnEvent));
+                removeEvent(this.element, 'mouseout', bind(this, hoverOutEvent));
             }
-            removeEvent(this.element, 'mouseover', bind(this, hoverOnEvent));
-            removeEvent(this.element, 'mouseout', bind(this, hoverOutEvent));
+
             this.element.parentNode.removeChild(this.element);
             this.element = null;
             this.nextSibling = null;
