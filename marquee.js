@@ -1,9 +1,12 @@
 /*
  * 文本滚动组件/marquee
  * http://xhyo.com/
- * version: 1.1
  * Copyright (c) 2015 Bill Chen(chenguibiao@yy.com/48838096@qq.com)
  * Released under the MIT license - http://opensource.org/licenses/MIT
+ *
+ * version: 1.2
+ * #由moves.status判断节点
+ * #transform模式修改为2段式
  */
 (function(window){
     var animationFrame = null; //window.requestAnimationFrame
@@ -35,10 +38,8 @@
             switch(this.status) {
                 case 1: this.status++;
                     break;
-                case 3: this.status++;
-                    break;
                 default:this.status = 9;
-                    console.log(this.duration, this.usedTime)
+
             }
         }
     }
@@ -143,8 +144,8 @@
      *                            direction: 0, //0:从右往左；1:从下往上；2:从左往右；3:从上往下
      *                            startEvent: function(){}, //移动开始事件
      *                            endEvent: function(){}, //移动结束事件
-     *                            reachEvent: function(){}, //移动元素到达边缘事件，return true的时候到达边缘后暂停。只支持位移(left/top)模式。根本停不下来
-     *                            hoverEvent: function(){} //移动元素鼠标悬停事件。只支持位移(left/top)模式。根本停不下来
+     *                            reachEvent: function(){}, //移动元素到达边缘事件，return true的时候到达边缘后暂停。只支持位移模式(transform模式根本停不下来)。
+     *                            hoverEvent: function(){} //移动元素鼠标悬停事件。只支持位移模式(transform模式根本停不下来)。
      *                            }
      */
     function Marquee(element, option) {
@@ -314,24 +315,15 @@
                                 switch(moves.status){
                                     case 0: {
                                         //开始移动(status变化点)
-                                        moves.status = 1;
+                                        moves.status++;
                                         moves.element.style.transition = 'transform '+Math.abs(this.duration-moves.duration)/1000+'s linear';
                                         moves.element.style.transform = 'translateY(-' + moves.height + 'px)';
                                     }
                                         break;
                                     case 2: {
                                         //整体越过起跑线(可以启动下一个对象)(status变化点)
-                                        moves.element.style.transition = 'transform '+Math.abs(this.duration*2-moves.duration)/1000+'s linear';
-                                        moves.element.style.transform = 'translateY(-' + this.height + 'px)';
-                                        moves.status++;
-                                    }
-                                        break;
-                                    case 4: {
-                                        //到达对岸
-                                        moves.element.style.transition = 'transform '+Math.abs(this.duration-moves.duration)/1000+'s linear';
+                                        moves.element.style.transition = 'transform '+this.duration/1000+'s linear';
                                         moves.element.style.transform = 'translateY(-' + moves.distance + 'px)';
-                                        if(this.reachEvent)
-                                            this.reachEvent(moves, time);
                                         moves.status++;
                                     }
                                 }
@@ -366,24 +358,15 @@
                                 switch(moves.status){
                                     case 0: {
                                         //开始移动(status变化点)
-                                        moves.status = 1;
+                                        moves.status++;
                                         moves.element.style.transition = 'transform '+Math.abs(this.duration-moves.duration)/1000+'s linear';
                                         moves.element.style.transform = 'translateY(' + moves.height + 'px)';
                                     }
                                         break;
                                     case 2: {
                                         //整体越过起跑线(可以启动下一个对象)(status变化点)
-                                        moves.element.style.transition = 'transform '+Math.abs(this.duration*2-moves.duration)/1000+'s linear';
-                                        moves.element.style.transform = 'translateY(' + this.height + 'px)';
-                                        moves.status++;
-                                    }
-                                        break;
-                                    case 4: {
-                                        //到达对岸
-                                        moves.element.style.transition = 'transform '+Math.abs(this.duration-moves.duration)/1000+'s linear';
+                                        moves.element.style.transition = 'transform '+this.duration/1000+'s linear';
                                         moves.element.style.transform = 'translateY(' + moves.distance + 'px)';
-                                        if(this.reachEvent)
-                                            this.reachEvent(moves, time);
                                         moves.status++;
                                     }
                                 }
@@ -418,24 +401,15 @@
                                 switch(moves.status){
                                     case 0: {
                                         //开始移动(status变化点)
-                                        moves.status = 1;
+                                        moves.status++;
                                         moves.element.style.transition = 'transform '+Math.abs(this.duration-moves.duration)/1000+'s linear';
                                         moves.element.style.transform = 'translateX(' + moves.width + 'px)';
                                     }
                                         break;
                                     case 2: {
                                         //整体越过起跑线(可以启动下一个对象)(status变化点)
-                                        moves.element.style.transition = 'transform '+Math.abs(this.duration*2-moves.duration)/1000+'s linear';
-                                        moves.element.style.transform = 'translateX(' + this.width + 'px)';
-                                        moves.status++;
-                                    }
-                                        break;
-                                    case 4: {
-                                        //到达对岸
-                                        moves.element.style.transition = 'transform '+Math.abs(this.duration-moves.duration)/1000+'s linear';
+                                        moves.element.style.transition = 'transform '+this.duration/1000+'s linear';
                                         moves.element.style.transform = 'translateX(' + moves.distance + 'px)';
-                                        if(this.reachEvent)
-                                            this.reachEvent(moves, time);
                                         moves.status++;
                                     }
                                 }
@@ -470,24 +444,15 @@
                                 switch(moves.status){
                                     case 0: {
                                         //开始移动(status变化点)
-                                        moves.status = 1;
+                                        moves.status++;
                                         moves.element.style.transition = 'transform '+Math.abs(this.duration-moves.duration)/1000+'s linear';
                                         moves.element.style.transform = 'translateX(-' + moves.width + 'px)';
                                     }
                                         break;
                                     case 2: {
                                         //整体越过起跑线(可以启动下一个对象)(status变化点)
-                                        moves.element.style.transition = 'transform '+Math.abs(this.duration*2-moves.duration)/1000+'s linear';
-                                        moves.element.style.transform = 'translateX(-' + this.width + 'px)';
-                                        moves.status++;
-                                    }
-                                        break;
-                                    case 4: {
-                                        //到达对岸
-                                        moves.element.style.transition = 'transform '+Math.abs(this.duration-moves.duration)/1000+'s linear';
+                                        moves.element.style.transition = 'transform '+this.duration/1000+'s linear';
                                         moves.element.style.transform = 'translateX(-' + moves.distance + 'px)';
-                                        if(this.reachEvent)
-                                            this.reachEvent(moves, time);
                                         moves.status++;
                                     }
                                 }
