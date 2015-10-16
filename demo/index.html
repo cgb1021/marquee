@@ -52,10 +52,10 @@ transformEnable: false, //transform模式还是位移(left/top)模式
 loop:1, //循环次数,0:无限循环;>0:按次数循环
 duration:5000, //移动持续时间
 direction: 0, //0:从右往左；1:从下往上；2:从左往右；3:从上往下
+hover: false, //鼠标经过是否暂停
 startEvent: function(moves,time){}, //移动开始事件
 endEvent: function(moves,time){}, //移动结束事件
 reachEvent: function(moves,time){}, //移动对象到达对岸事件。return true的时候暂停。只支持位移模式(transform模式根本停不下来)。
-hoverEvent: function(moves,time){} //移动对象鼠标悬停事件。return true的时候暂停。只支持位移模式(transform模式根本停不下来)。
 }</code></pre></p>
   <p>4个事件中，出入参数是:(moves,time)。其中moves为Moves对象,time为时间(单位毫秒)。</p>
   <p>moves包含的属性和方法有：
@@ -76,6 +76,7 @@ hoverEvent: function(moves,time){} //移动对象鼠标悬停事件。return tru
     <li>usedTime:当前移动时长</li>
     <li>reachTime:到达对岸时间</li>
     <li>isHover:是否有鼠标经过</li>
+    <li>stopIfHover:鼠标经过是否暂停</li>
   </ul></p>
   <p>因为是多个元素动态移动，所以有可能边缘会重叠，解决方法是：<ol><li>设置一个几像素padding值</li><li>把多个元素放在一个moves里一起移动</li></ol></p>
 </div>
@@ -189,9 +190,9 @@ marquee('marquee2',{duration:3000,transformEnable:true});
 //位移模式下到达边缘暂停
 marquee('marquee3',{duration:3000,reachEvent:function(m, t){m.element.className='red'; if((t-m.reachTime)< 3000) return true; else return false;}});
 //位移模式下鼠标经过事件
-marquee('marquee6',{duration:3000,hoverEvent:function(m, t){console.log('有鼠标经过'); return true;}});
+marquee('marquee6',{duration:3000,hover:true});
 //位移模式下的事件
-marquee('marquee4',{duration:3000,startEvent:function(m, t){console.log('位移模式下的事件::我开始滚了'); $(m.element).addClass('red');},endEvent:function(m, t){console.log('位移模式下的事件::我滚完了',m.duration,m.usedTime)},reachEvent:function(m, t){console.log('位移模式下的事件::到达边缘');$(m.element).removeClass('red');},hoverEvent:function(m, t){console.log('位移模式下的事件::有鼠标经过')}});
+marquee('marquee4',{duration:3000,startEvent:function(m, t){console.log('位移模式下的事件::我开始滚了'); $(m.element).addClass('red');},endEvent:function(m, t){console.log('位移模式下的事件::我滚完了',m.duration,m.usedTime)},reachEvent:function(m, t){console.log('位移模式下的事件::到达边缘');$(m.element).removeClass('red');}});
 //transform模式下的事件
 marquee('marquee5',{duration:3000,startEvent:function(m, t){console.log('transform模式下的事件::我开始滚了')},endEvent:function(m, t){console.log('transform模式下的事件::我滚完了',m.duration,m.usedTime)}});
 //try it again

@@ -83,6 +83,7 @@
         this.duration = option.duration; //移动时间
         this.direction = option.direction; //移动方向
         this.transformEnable = option.transformEnable; //使用transform模式
+        this.stopIfHover = option.hover; //鼠标经过是否暂停
         this.isHover = false; //是否鼠标经过
 
         this.element.style.position = 'absolute';
@@ -151,10 +152,10 @@
      *                            loop:1, //循环次数,0:无限循环;>0:按次数循环
      *                            duration:5000, //移动持续时间
      *                            direction: 0, //0:从右往左；1:从下往上；2:从左往右；3:从上往下
+     *                            hover: false, //鼠标经过是否暂停
      *                            startEvent: function(moves,time){}, //移动开始事件
      *                            endEvent: function(moves,time){}, //移动结束事件
      *                            reachEvent: function(moves,time){}, //移动对象到达对岸事件。return true的时候暂停。只支持位移模式(transform模式根本停不下来)。
-     *                            hoverEvent: function(moves,time){} //移动对象鼠标悬停事件。return true的时候暂停。只支持位移模式(transform模式根本停不下来)。
      *                            }
      */
     function Marquee(element, option) {
@@ -180,19 +181,19 @@
             this.loop = typeof option.loop != 'undefined' ? Math.abs(parseInt(option.loop,10)) : 1; //循环次数,0:无限循环;>0:按次数循环
             this.duration = typeof option.duration != 'undefined' ? Math.abs(parseInt(option.duration,10)) : element.clientWidth*10; //移动持续时间
             this.direction = parseInt(option.direction,10) || 0; //0:从右往左；1:从下往上；2:从左往右；3:从上往下
+            this.hover = !!option.hover;
             this.startEvent = option.startEvent || null; //移动开始事件
             this.endEvent = option.endEvent || null; //移动结束事件
             this.reachEvent = option.reachEvent || null; //移动元素到达边缘事件，return true的时候到达边缘后暂停。只支持位移(left/top)模式
-            this.hoverEvent = option.hoverEvent || null; //移动元素鼠标悬停事件。只支持位移(left/top)模式
         } else {
             this.transformEnable = false;
             this.loop = 1;
             this.duration = this.container.clientWidth*10;
             this.direction = 0;
+            this.hover = false;
             this.startEvent = null;
             this.endEvent = null;
             this.reachEvent = null;
-            this.hoverEvent = null;
         }
 
         nodes = this.container.childNodes;
@@ -216,6 +217,7 @@
         option.height = element.offsetHeight;
         option.left = element.offsetLeft;
         option.top = element.offsetTop;
+        option.hover = this.hover;
         //确定初始位置
         switch(this.direction) {
             case 1: {
@@ -300,6 +302,7 @@
 
             for(i=0; i < length; i++){
                 moves = this.list[i];
+
                 if(moves.status === 9) {
                     //到达终点，清理元素
                     if(this.endEvent) {
@@ -314,7 +317,7 @@
                     }
                     //从list里移除
                     this.list[i] = null;
-                } else if(moves.isHover && this.hoverEvent && this.hoverEvent(moves, time) && !this.transformEnable) {
+                } else if(moves.isHover && moves.stopIfHover && !this.transformEnable) {
                     //鼠标hover暂停
                 } else if(!this.transformEnable && moves.status === 4 && moves.reachTime && this.reachEvent && this.reachEvent(moves, time)) {
                     //到达对岸暂停，仅限位移模式
