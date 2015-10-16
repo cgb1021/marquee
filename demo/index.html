@@ -10,7 +10,9 @@ body {
 	font-size: 14px;
 	line-height: 1.5;
 }
-.red {color:red;}
+.red {
+	color: red;
+}
 .marquee {
 	width: 600px;
 	height: 200px;
@@ -26,6 +28,8 @@ body {
 }
 pre {
 	background: #f1f1f1;
+	padding:10px;
+	border:1px dotted #ccc;
 }
 .btn {
 	padding: 5px 20px;
@@ -37,28 +41,51 @@ pre {
 
 <body>
 <h1>超级好用的marquee</h1>
-<p>这是一个marquee插件，支持传统的left,top方式移动，也支持CSS3标准的transform方式移动。</p>
-<p>任何使用的问题，请联系48838096@qq.com。欢迎访问的我的个人博客：<a href="http://xhyo.com/" target="_blank">http://xhyo.com/</a>。</p>
+<div>
+  <p>这是一个marquee插件，支持传统的left,top方式移动，也支持CSS3标准的transform方式移动。</p>
+  <p>任何使用的问题，请联系48838096@qq.com。欢迎访问的我的个人博客：<a href="http://xhyo.com/" target="_blank">http://xhyo.com/</a>。</p>
+  <p>初始化：marquee(element,option)</p>
+  <p><code>element</code>可以是一个dom对象，也可以是一个id字符串,传入字符串的时候会缓存对象</p>
+  <p><code>option</code>接收的内容可以有：
+  <pre><code>{
+transformEnable: false, //transform模式还是位移(left/top)模式
+loop:1, //循环次数,0:无限循环;>0:按次数循环
+duration:5000, //移动持续时间
+direction: 0, //0:从右往左；1:从下往上；2:从左往右；3:从上往下
+startEvent: function(moves,time){}, //移动开始事件
+endEvent: function(moves,time){}, //移动结束事件
+reachEvent: function(moves,time){}, //移动元素到达边缘事件，return true的时候到达边缘后暂停。只支持位移模式
+hoverEvent: function(moves,time){} //移动元素鼠标悬停事件
+}</code></pre></p>
+  <p>4个事件中，出入参数是:(moves,time)。其中moves为Moves对象,time为时间(单位毫秒)。</p>
+  <p>moves包含的属性和方法有：
+  <ul>
+    <li>nextSibling:下一个moves对象</li>
+    <li>element:DOM元素</li>
+    <li>width:宽度</li>
+    <li>height:高度</li>
+    <li>left:初始水平位置</li>
+    <li>top:初始垂直位置</li>
+    <li>x:水平坐标</li>
+    <li>y:垂直坐标</li>
+    <li>distance:移动距离</li>
+    <li>duration:移动时间</li>
+    <li>direction:移动方向</li>
+    <li>transformEnable:使用transform模式</li>
+    <li>status:状态值。0,未开始;1,开始;2,完全露出(可以开始下一个对象);3,完全越过开始位置;4,到达边缘;5,越过边缘;9,到达尽头</li>
+    <li>usedTime:当前移动时长</li>
+    <li>reachTime:到达对岸时间</li>
+    <li>isHover:是否有鼠标经过</li>
+  </ul></p>
+  <p>因为是多个元素动态移动，所以有可能边缘会重叠，解决方法是：<ol><li>设置一个几像素padding值</li><li>把多个元素放在一个moves里一起移动</li></ol></p>
+</div>
 <div class="demo">
   <h2>最简单的调用方法(位移模式)</h2>
   <div class="marquee" id="marquee1">
     <div>这是一个marquee插件，支持传统的left,top方式移动，也支持CSS3标准的transform方式移动。</div>
   </div>
   <a href="#" title="再试一次" data-order="0" class="btn try-it-again">再试一次</a>
-  <pre><code>marquee(document.getElementById('marquee1'),{duration:3000});</code></pre>
-  <p>初始化：marquee(element,option)</p>
-  <p><code>element</code>可以是一个dom对象，也可以是一个id字符串,传入字符串的时候会缓存对象</p>
-  <p><code>option</code>接收的内容可以有：</p>
-  <pre><code>{
-transformEnable: false, //transform模式还是位移(left/top)模式
-loop:1, //循环次数,0:无限循环;>0:按次数循环
-duration:5000, //移动持续时间
-direction: 0, //0:从右往左；1:从下往上；2:从左往右；3:从上往下
-startEvent: function(){}, //移动开始事件
-endEvent: function(){}, //移动结束事件
-reachEvent: function(){}, //移动元素到达边缘事件，return true的时候到达边缘后暂停。只支持位移模式
-hoverEvent: function(){} //移动元素鼠标悬停事件
-}</code></pre>
+  <pre><code>marquee('marquee1',{duration:3000});</code></pre>
 </div>
 <div class="demo">
   <h2>最简单的调用方法(transform模式)</h2>
@@ -66,7 +93,7 @@ hoverEvent: function(){} //移动元素鼠标悬停事件
     <div>这是一个marquee插件，支持传统的left,top方式移动，也支持CSS3标准的transform方式移动。</div>
   </div>
   <a href="#" title="再试一次" data-order="1" class="btn try-it-again">再试一次</a>
-  <pre><code>marquee(document.getElementById('marquee2'),{duration:3000,transformEnable:true});</code></pre>
+  <pre><code>marquee('marquee2',{duration:3000,transformEnable:true});</code></pre>
 </div>
 <div class="demo">
   <h2>位移模式下到达边缘暂停</h2>
@@ -74,12 +101,47 @@ hoverEvent: function(){} //移动元素鼠标悬停事件
     <div>这是一个marquee插件，支持传统的left,top方式移动，也支持CSS3标准的transform方式移动。</div>
   </div>
   <a href="#" title="再试一次" data-order="2" class="btn try-it-again">再试一次</a>
-  <pre><code>marquee('marquee3',{duration:3000,reachEvent:function(m, t){m.element.className='red'; if((t-m.reachTime)< 3000) return true; else {return false;}}});</code></pre>
+  <pre><code>marquee('marquee3',{duration:3000,
+  reachEvent:function(m, t){m.element.className='red'; if((t-m.reachTime)< 3000) return true; else return false;}
+});</code></pre>
+</div>
+<div class="demo">
+  <h2>位移模式下鼠标经过事件</h2>
+  <div class="marquee" id="marquee6">
+    <div>这是一个marquee插件，支持传统的left,top方式移动，也支持CSS3标准的transform方式移动。</div>
+  </div>
+  <a href="#" title="再试一次" data-order="5" class="btn try-it-again">再试一次</a>
+  <pre><code>...</code></pre>
+</div>
+<div class="demo">
+  <h2>位移模式下的事件</h2>
+  <div class="marquee" id="marquee4">
+    <div>这是一个marquee插件，支持传统的left,top方式移动，也支持CSS3标准的transform方式移动。</div>
+  </div>
+  <a href="#" title="再试一次" data-order="3" class="btn try-it-again">再试一次</a>
+  <pre><code>marquee('marquee4',{duration:3000,
+  startEvent:function(m, t){console.log('我开始滚了'); $(m.element).addClass('red');},
+  endEvent:function(m, t){console.log('我滚完了')},
+  reachEvent:function(m, t){console.log('到达边缘');$(m.element).removeClass('red');},
+  hoverEvent:function(m, t){console.log('有鼠标经过')}
+});</code></pre>
+</div>
+<div class="demo">
+  <h2>transform模式下的事件</h2>
+  <div class="marquee" id="marquee5">
+    <div>这是一个marquee插件，支持传统的left,top方式移动，也支持CSS3标准的transform方式移动。</div>
+  </div>
+  <a href="#" title="再试一次" data-order="4" class="btn try-it-again">再试一次</a>
+  <pre><code>marquee('marquee5',{duration:3000,
+  startEvent:function(m, t){console.log('transform模式下的事件::我开始滚了')},
+  endEvent:function(m, t){console.log('transform模式下的事件::我滚完了',m.duration,m.usedTime)}
+});</code></pre>
 </div>
 <div class="demo">
   <h2>综合应用demo</h2>
   <div class="marquee" id="marquee"></div>
-  <label>选择方向：<select id="direction" name="direction">
+  <label>选择方向：
+    <select id="direction" name="direction">
       <option value="0" selected>从右往左</option>
       <option value="1">从下往上</option>
       <option value="2">从左往右</option>
@@ -87,16 +149,20 @@ hoverEvent: function(){} //移动元素鼠标悬停事件
     </select>
   </label>
   |
-  <label>移动个数：<input type="text" name="number" id="number" value="2">
+  <label>移动个数：
+    <input type="text" name="number" id="number" value="2">
   </label>
   |
-  <label>设置时间：<input type="text" name="duration" id="duration" value="2000">
+  <label>设置时间：
+    <input type="text" name="duration" id="duration" value="2000">
   </label>
   |
-  <label>使用transform：<input type="checkbox" name="use_html5" id="use_html5">
+  <label>使用transform：
+    <input type="checkbox" name="use_html5" id="use_html5">
   </label>
   |
-  <label>循环次数：<input type="text" name="loop" id="loop" value="2">
+  <label>循环次数：
+    <input type="text" name="loop" id="loop" value="2">
   </label>
   | <a href="#" id="just_do_it" class="btn">试一下</a> </div>
 <script>
@@ -105,6 +171,9 @@ window.console = window.console || {'log':function(){}};
 <script type="text/javascript" src="jquery.min.js"></script> 
 <script src="../marquee.js"></script> 
 <script>
+if(!window.console) {
+	window.console.log = function(msg) {alert(msg);}
+}
 function getText() {
 	var textArr = ['YY娱乐是全国最大的真人互动视频直播社区','支持百万人同时在线视频聊天','美女直播 ','K歌跳舞','视频交友','看网络节目','与明星歌手','美女主播互动就在YY娱乐社区'];
 	var r = Math.floor(Math.random()*textArr.length);
@@ -116,7 +185,13 @@ marquee('marquee1',{duration:3000});
 //最简单的调用方法(transform模式)
 marquee('marquee2',{duration:3000,transformEnable:true});
 //位移模式下到达边缘暂停
-marquee('marquee3',{duration:3000,reachEvent:function(m, t){m.element.className='red'; if((t-m.reachTime)< 3000) return true; else {return false;}}});
+marquee('marquee3',{duration:3000,reachEvent:function(m, t){m.element.className='red'; if((t-m.reachTime)< 3000) return true; else return false;}});
+//位移模式下鼠标经过事件
+marquee('marquee6',{duration:3000,hoverEvent:function(m, t){console.log('有鼠标经过'); return true;}});
+//位移模式下的事件
+marquee('marquee4',{duration:3000,startEvent:function(m, t){console.log('我开始滚了'); $(m.element).addClass('red');},endEvent:function(m, t){console.log('我滚完了')},reachEvent:function(m, t){console.log('到达边缘');$(m.element).removeClass('red');},hoverEvent:function(m, t){console.log('有鼠标经过')}});
+//transform模式下的事件
+marquee('marquee5',{duration:3000,startEvent:function(m, t){console.log('transform模式下的事件::我开始滚了')},endEvent:function(m, t){console.log('transform模式下的事件::我滚完了',m.duration,m.usedTime)}});
 //try it again
 $('a.try-it-again').on('click', function(){
 	switch($(this).data('order')) {
@@ -125,6 +200,15 @@ $('a.try-it-again').on('click', function(){
 		break;
 		case 2 : 
 		marquee('marquee3').push($('<div>'+getText()+'</div>')[0]);
+		break;
+		case 3 : 
+		marquee('marquee4').push($('<div>'+getText()+'</div>')[0]);
+		break;
+		case 4 : 
+		marquee('marquee5').push($('<div>'+getText()+'</div>')[0]);
+		break;
+		case 5 : 
+		marquee('marquee6').push($('<div>'+getText()+'</div>')[0]);
 		break;
 		default:
 		marquee('marquee1').push($('<div>'+getText()+'</div>')[0]);

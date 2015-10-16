@@ -13,14 +13,16 @@
     var supportHtml5 = false; //是否支持标准html5
     var transitionEnd = ''; //transitionEnd字符串
     var transitionEndEvent = null; //transitionEnd事件
+    var hoverOnEvent = null; //hover on事件
+    var hoverOutEvent = null; //hover out事件
     var marqueeList = {}; //缓存marquee对象
+    var prefixs = ['webkit','moz','ms','o']; //浏览器前缀
     //定义动画执行函数
     if(window.requestAnimationFrame){
         supportHtml5 = true;
         animationFrame = window.requestAnimationFrame;
         transitionEnd = 'transitionend';
     } else {
-        var prefixs = ['webkit','moz','ms','o'];
         for(var i = 0; i < prefixs.length;i++) {
             if(window[prefixs[i]+'RequestAnimationFrame']) {
                 animationFrame = window[prefixs[i]+'RequestAnimationFrame'];
@@ -33,15 +35,18 @@
             animationFrame = function(callback) {window.setTimeout(callback,1000/60)}
         }
     }
-    if(transitionEnd) {
-        transitionEndEvent = function(e) {
-            switch(this.status) {
-                case 1: this.status++;
-                    break;
-                default:this.status = 9;
-
-            }
+    transitionEndEvent = function(e) {
+        switch(this.status) {
+            case 1: this.status++;
+                break;
+            default:this.status = 9;
         }
+    }
+    hoverOnEvent = function(e) {
+        this.isHover = true;
+    }
+    hoverOutEvent = function(e) {
+        this.isHover = false;
     }
     //addEventListener
     var addEvent = (function(){
@@ -78,6 +83,7 @@
         this.duration = option.duration; //移动时间
         this.direction = option.direction; //移动方向
         this.transformEnable = option.transformEnable; //使用transform模式
+        this.isHover = false; //是否鼠标经过
 
         this.element.style.position = 'absolute';
         this.element.style.left = this.left +'px';
@@ -89,6 +95,8 @@
         if(this.transformEnable) {
             addEvent(this.element, transitionEnd, bind(this, transitionEndEvent));
         }
+        addEvent(this.element, 'mouseover', bind(this, hoverOnEvent));
+        addEvent(this.element, 'mouseout', bind(this, hoverOutEvent));
         this.reset();
     }
     //重置元素
@@ -115,8 +123,8 @@
         }
         this.status = 0; //0,未开始;1,开始;2,完全露出(可以开始下一个对象);3,完全越过开始位置;4,到达边缘;5,越过边缘;9,到达尽头
         //重置时间
-        this.usedTime = 0; //移动时长
-        this.reachTime = 0; //到达边缘时间
+        this.usedTime = 0; //当前移动时长
+        this.reachTime = 0; //到达对岸时间
     }
     //销毁元素
     Moves.prototype.destroy = function(){
@@ -124,6 +132,8 @@
             if(this.transformEnable) {
                 removeEvent(this.element, transitionEnd, bind(this, transitionEndEvent));
             }
+            removeEvent(this.element, 'mouseover', bind(this, hoverOnEvent));
+            removeEvent(this.element, 'mouseout', bind(this, hoverOutEvent));
             this.element.parentNode.removeChild(this.element);
             this.element = null;
             this.nextSibling = null;
@@ -131,7 +141,6 @@
             if(window.console)
                 console.log(e,this);
         }
-
     }
 
     /*
@@ -142,10 +151,10 @@
      *                            loop:1, //循环次数,0:无限循环;>0:按次数循环
      *                            duration:5000, //移动持续时间
      *                            direction: 0, //0:从右往左；1:从下往上；2:从左往右；3:从上往下
-     *                            startEvent: function(){}, //移动开始事件
-     *                            endEvent: function(){}, //移动结束事件
-     *                            reachEvent: function(){}, //移动元素到达边缘事件，return true的时候到达边缘后暂停。只支持位移模式(transform模式根本停不下来)。
-     *                            hoverEvent: function(){} //移动元素鼠标悬停事件。只支持位移模式(transform模式根本停不下来)。
+     *                            startEvent: function(moves,time){}, //移动开始事件
+     *                            endEvent: function(moves,time){}, //移动结束事件
+     *                            reachEvent: function(moves,time){}, //移动元素到达边缘事件，return true的时候到达边缘后暂停。只支持位移模式(transform模式根本停不下来)。
+     *                            hoverEvent: function(moves,time){} //移动元素鼠标悬停事件。只支持位移模式(transform模式根本停不下来)。
      *                            }
      */
     function Marquee(element, option) {
@@ -305,6 +314,8 @@
                     }
                     //从list里移除
                     this.list[i] = null;
+                } else if(moves.isHover && this.hoverEvent && this.hoverEvent(moves, time) && !this.transformEnable) {
+                    //鼠标hover暂停
                 } else if(!this.transformEnable && moves.status === 4 && moves.reachTime && this.reachEvent && this.reachEvent(moves, time)) {
                     //到达对岸暂停，仅限位移模式
                 } else {
