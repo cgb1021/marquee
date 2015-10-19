@@ -209,7 +209,7 @@
         if(typeof element != 'object' || element.nodeType != 1)
             return null;
 
-        var moves,time,option={direction: this.direction,transformEnable: this.transformEnable};
+        var moves,option={direction: this.direction,transformEnable: this.transformEnable, hover: this.hover};
 
         //添加元素
         if(element.parentNode !== this.container) {
@@ -221,7 +221,6 @@
         option.height = element.offsetHeight;
         option.left = element.offsetLeft;
         option.top = element.offsetTop;
-        option.hover = this.hover;
         //确定初始位置
         switch(this.direction) {
             case 1: {
@@ -251,7 +250,7 @@
         //生成一个移动对象
         moves = new Moves(option);
         if(!this.prevMoves) {
-            this.lastTime = time = new Date().getTime();
+            this.lastTime = new Date().getTime();
             this.fistMoves = this.prevMoves = moves;
             this.loopCounter = 1;
             //启动第一个移动对象
@@ -323,10 +322,11 @@
                     this.list[i] = null;
                 } else if(moves.isHover && moves.stopIfHover && !this.transformEnable) {
                     //鼠标hover暂停
-                } else if(!this.transformEnable && moves.status === 4 && moves.reachTime && this.reachEvent && this.reachEvent(moves, time)) {
+                } else if(!this.transformEnable && moves.status === 4 && this.reachEvent && this.reachEvent(moves, time)) {
                     //到达对岸暂停，仅限位移模式
                 } else {
                     //正常流程
+                    //垂直方向
                     switch(this.direction) {
                         case 1: {
                             if(this.transformEnable) {
@@ -334,7 +334,7 @@
                                     case 0: {
                                         //开始移动(status变化点)
                                         moves.status++;
-                                        moves.element.style.transition = 'transform '+Math.abs(this.duration-moves.duration)/1000+'s linear';
+                                        moves.element.style.transition = 'transform '+(moves.duration-this.duration)/1000+'s linear';
                                         moves.element.style.transform = 'translateY(-' + moves.height + 'px)';
                                     }
                                         break;
@@ -377,7 +377,7 @@
                                     case 0: {
                                         //开始移动(status变化点)
                                         moves.status++;
-                                        moves.element.style.transition = 'transform '+Math.abs(this.duration-moves.duration)/1000+'s linear';
+                                        moves.element.style.transition = 'transform '+(moves.duration-this.duration)/1000+'s linear';
                                         moves.element.style.transform = 'translateY(' + moves.height + 'px)';
                                     }
                                         break;
@@ -414,13 +414,14 @@
                             }
                         }
                             break;
+                        //水平方向
                         case 2: {
                             if(this.transformEnable) {
                                 switch(moves.status){
                                     case 0: {
                                         //开始移动(status变化点)
                                         moves.status++;
-                                        moves.element.style.transition = 'transform '+Math.abs(this.duration-moves.duration)/1000+'s linear';
+                                        moves.element.style.transition = 'transform '+(moves.duration-this.duration)/1000+'s linear';
                                         moves.element.style.transform = 'translateX(' + moves.width + 'px)';
                                     }
                                         break;
@@ -463,7 +464,7 @@
                                     case 0: {
                                         //开始移动(status变化点)
                                         moves.status++;
-                                        moves.element.style.transition = 'transform '+Math.abs(this.duration-moves.duration)/1000+'s linear';
+                                        moves.element.style.transition = 'transform '+(moves.duration-this.duration)/1000+'s linear';
                                         moves.element.style.transform = 'translateX(-' + moves.width + 'px)';
                                     }
                                         break;
